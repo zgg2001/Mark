@@ -85,6 +85,18 @@ user::_update_plan(int id, int newsta)
     return false;
 }
 
-
+bool 
+user::search(int id)
+{
+    for(int i : {1, 0, 2})//进行中/搁置/已完成
+    {
+        auto iter = std::find(plans[i].begin(), plans[i].end(), id);
+        if(iter != plans[i].end())
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 

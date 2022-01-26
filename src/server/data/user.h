@@ -29,9 +29,10 @@
 class user
 {
 public:
+    user() = default;
     user(int u_id, std::string name, std::string email);
-    user(const user&) = delete;
-    user& operator= (const user&) = delete;
+    user(const user&) = default;
+    user& operator= (const user&) = default;
 
     /*
     * 添加新计划
@@ -67,6 +68,13 @@ public:
     */
     bool updplan(int id, plan_status newsta);
     bool updplan(int id, int newsta);
+
+    /*
+    * 搜索计划
+    * id: 要搜索的计划id(组内id)
+    * 返回true为找到
+    */
+    bool search(int id);
 
 private:
     bool _update_plan(int id, int newsta);
