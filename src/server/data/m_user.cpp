@@ -1,13 +1,13 @@
 /*************************************************************************
-	> File Name: user.cpp
+	> File Name: m_user.cpp
 	> Author: ZHJ
 	> Remarks: 数据结构 -- 用户 
 	> Created Time: Tue 25 Jan 2022 09:31:03 PM CST
  ************************************************************************/
 
-#include"user.h"
+#include"m_user.h"
 
-user::user(int u_id, std::string name, std::string email):
+m_user::m_user(int u_id, std::string name, std::string email):
     user_id(u_id),
     username(name),
     mail(email)
@@ -16,7 +16,7 @@ user::user(int u_id, std::string name, std::string email):
 }
 
 void 
-user::addplan(plan_status status, int id)
+m_user::addplan(plan_status status, int id)
 {
     int sta = static_cast<int>(status);
     if(sta < 0 || sta > 2)
@@ -25,7 +25,7 @@ user::addplan(plan_status status, int id)
 }
 
 void 
-user::addplan(int status, int id)
+m_user::addplan(int status, int id)
 {
     if(status < 0 || status > 2)
         return;
@@ -33,7 +33,7 @@ user::addplan(int status, int id)
 }
 
 bool 
-user::delplan(int id)
+m_user::delplan(int id)
 {
     for(int i : {1, 0, 2})//进行中/搁置/已完成
     {
@@ -49,7 +49,7 @@ user::delplan(int id)
 }
 
 bool 
-user::updplan(int id, plan_status newsta)
+m_user::updplan(int id, plan_status newsta)
 {
     int sta = static_cast<int>(newsta);
     if(sta < 0 || sta > 2)
@@ -58,7 +58,7 @@ user::updplan(int id, plan_status newsta)
 }
 
 bool 
-user::updplan(int id, int newsta)
+m_user::updplan(int id, int newsta)
 {
     if(newsta < 0 || newsta > 2)
         return false;
@@ -66,7 +66,7 @@ user::updplan(int id, int newsta)
 }
 
 bool 
-user::_update_plan(int id, int newsta)
+m_user::_update_plan(int id, int newsta)
 {
     for(int i : {1, 0, 2})//进行中/搁置/已完成
     {
@@ -86,7 +86,7 @@ user::_update_plan(int id, int newsta)
 }
 
 bool 
-user::search(int id)
+m_user::search(int id)
 {
     for(int i : {1, 0, 2})//进行中/搁置/已完成
     {

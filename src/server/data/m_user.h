@@ -1,18 +1,18 @@
 /*************************************************************************
-	> File Name: user.h
+	> File Name: m_user.h
 	> Author: ZHJ
 	> Remarks: 数据结构 -- 用户
 	> Created Time: Tue 25 Jan 2022 09:30:54 PM CST
  ************************************************************************/
 
-#ifndef _USER_H_
-#define _USER_H_
+#ifndef _M_USER_H_
+#define _M_USER_H_
 
 #include<string>
 #include<vector>
 #include<list>
 #include<algorithm>
-#include"plan.h"
+#include"m_plan.h"
 
 /*
 * 数据结构 -- 用户
@@ -26,13 +26,13 @@
 *           plans[1] = 进行中计划组
 *           plans[2] = 已完成计划组
 */
-class user
+class m_user
 {
 public:
-    user() = default;
-    user(int u_id, std::string name, std::string email);
-    user(const user&) = default;
-    user& operator= (const user&) = default;
+    m_user(int u_id, std::string name, std::string email);
+    m_user() = default;
+    m_user(const m_user&) = default;
+    m_user& operator= (const m_user&) = default;
 
     /*
     * 添加新计划
