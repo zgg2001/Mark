@@ -1,27 +1,28 @@
 /*************************************************************************
-	> File Name: group.h
+	> File Name: m_group.h
 	> Author: ZHJ
 	> Remarks: 数据结构 -- 组
 	> Created Time: Tue 25 Jan 2022 09:30:25 PM CST
  ************************************************************************/
 
-#ifndef _GROUP_H_
-#define _GROUP_H_
+#ifndef _M_GROUP_H_
+#define _M_GROUP_H_
 
 #include<map>
-#include"user.h"
+#include"m_user.h"
 
 /*
 * 数据结构 -- 组
 * 每一个实例就是一个组
 * 组中储存了所属于此组的计划和用户
 */
-class group
+class m_group
 {
 public:
-    group(int g_id, int a_id);
-    group(const group&) = delete;
-    group& operator= (const group&) = delete;
+    m_group(int g_id, int a_id);
+    m_group() = default;
+    m_group(const m_group&) = default;
+    m_group& operator= (const m_group&) = default;
 
     /*
     * 计划 增加
@@ -113,8 +114,8 @@ public:
     * plans: 储存了此组中的计划 key为组内id
     * users: 储存了此组中的用户 key为用户id
     */
-    std::unordered_map<int, plan> plans;
-    std::unordered_map<int, user> users;
+    std::unordered_map<int, m_plan> plans;
+    std::unordered_map<int, m_user> users;
 };
 
 #endif

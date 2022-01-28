@@ -1,13 +1,13 @@
 /*************************************************************************
-	> File Name: group.cpp
+	> File Name: m_group.cpp
 	> Author: ZHJ
 	> Remarks: 数据结构 -- 组
 	> Created Time: Tue 25 Jan 2022 09:30:37 PM CST
  ************************************************************************/
 
-#include"group.h"
+#include"m_group.h"
 
-group::group(int g_id, int a_id):
+m_group::m_group(int g_id, int a_id):
     group_id(g_id),
     plan_max_id(0),
     admin_id(a_id)
@@ -16,7 +16,7 @@ group::group(int g_id, int a_id):
 }
 
 int 
-group::addplan(int u_id, int status,
+m_group::addplan(int u_id, int status,
                int plan_id, int user_id,
                int create_t, int plan_t,
                const char* content_str, const char* remark_str)
@@ -30,7 +30,7 @@ group::addplan(int u_id, int status,
 }
 
 int 
-group::addplan(int p_id, int u_id, int status,
+m_group::addplan(int p_id, int u_id, int status,
                int plan_id, int user_id,
                int create_t, int plan_t,
                const char* content_str, const char* remark_str)
@@ -42,7 +42,7 @@ group::addplan(int p_id, int u_id, int status,
 }
 
 int 
-group::_add_plan(int p_id, int u_id, int status,
+m_group::_add_plan(int p_id, int u_id, int status,
                  int plan_id, int user_id,
                  int create_t, int plan_t,
                  const char* content_str, const char* remark_str)
@@ -67,7 +67,7 @@ group::_add_plan(int p_id, int u_id, int status,
 }
 
 int
-group::delplan(int u_id, int p_id)
+m_group::delplan(int u_id, int p_id)
 {
     if(users.count(u_id) == 0 || plans.count(p_id) == 0)
         return -1;
@@ -77,7 +77,7 @@ group::delplan(int u_id, int p_id)
 }
 
 int 
-group::updplan_t(int u_id, int p_id, int time)
+m_group::updplan_t(int u_id, int p_id, int time)
 {
     if(users.count(u_id) == 0 || plans.count(p_id) == 0)
         return -1;
@@ -89,7 +89,7 @@ group::updplan_t(int u_id, int p_id, int time)
 }
 
 int 
-group::updplan_s(int u_id, int p_id, int status)
+m_group::updplan_s(int u_id, int p_id, int status)
 {
     if(users.count(u_id) == 0 || plans.count(p_id) == 0)
         return -1;
@@ -104,7 +104,7 @@ group::updplan_s(int u_id, int p_id, int status)
 }
 
 int 
-group::updplan_c(int u_id, int p_id,
+m_group::updplan_c(int u_id, int p_id,
                  const char* content_str, const char* remark_str)
 {
     if(users.count(u_id) == 0 || plans.count(p_id) == 0)
@@ -117,7 +117,7 @@ group::updplan_c(int u_id, int p_id,
 }
 
 bool 
-group::adduser(int u_id, std::string name, std::string email)
+m_group::adduser(int u_id, std::string name, std::string email)
 {
     if(users.count(u_id))
         return false;
@@ -127,7 +127,7 @@ group::adduser(int u_id, std::string name, std::string email)
 }
 
 bool 
-group::deluser(int u_id)
+m_group::deluser(int u_id)
 {
     return users.erase(u_id);
 }
