@@ -7,11 +7,11 @@
 
 #include<cstdio>
 #include<cstring>
-#include"plan.h"
+#include"m_plan.h"
 
-plan::plan(int plan_id, int user_id,
-           int create_t, int plan_t,
-           const char* content_str, const char* remark_str):
+m_plan::m_plan(int plan_id, int user_id,
+               int create_t, int plan_t,
+               const char* content_str, const char* remark_str):
     id(plan_id),
     create_user(user_id),
     status(plan_status::shelve),
@@ -22,18 +22,18 @@ plan::plan(int plan_id, int user_id,
     memset(content, 0, sizeof(content));
     memset(remark, 0, sizeof(remark));
     if(content_str != nullptr)
-        snprintf(content, plan::SIZE, "%s", content_str);
+        snprintf(content, m_plan::SIZE, "%s", content_str);
     if(remark_str != nullptr)
-        snprintf(remark, plan::SIZE, "%s", remark_str);
+        snprintf(remark, m_plan::SIZE, "%s", remark_str);
 }
 
 void 
-plan::change(const char* content_str, const char* remark_str)
+m_plan::change(const char* content_str, const char* remark_str)
 {
     if(content_str == nullptr)
         return;
-    snprintf(content, plan::SIZE, "%s", content_str);
+    snprintf(content, m_plan::SIZE, "%s", content_str);
     if(remark_str != nullptr)
-        snprintf(remark, plan::SIZE, "%s", remark_str);
+        snprintf(remark, m_plan::SIZE, "%s", remark_str);
 }
 
