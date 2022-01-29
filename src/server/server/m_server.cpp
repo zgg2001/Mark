@@ -125,9 +125,43 @@ m_server::m_close()
 void
 m_server::m_work()
 {
+    INFO("Server work start");
     
-}
+    //epoll
+    int epollfd = epoll_create(1);//主线程epoll仅关注连接事件
+    struct epoll_event ev;
+    ev.data.fd = _sock;
+    ev.events = EPOLLIN;
+    epoll_ctl(epollfd, EPOLL_CTL_ADD, _sock, &ev);
 
+    //处理
+    while(1)
+    {
+        //epoll监听新连接
+        struct epoll_event events;
+        int event_count = epoll_wait(epollfd, &events, 1, -1);//阻塞 
+        if(event_count < 0)
+        {
+            ERROR("Server epoll_wait() error -- %s", strerror(errno));
+            break;
+        }
+        if(event_count == 0)
+        {
+            DEBUG("Server epoll_wait() timeout"); 
+            continue;
+        }
+        else//处理新连接
+        {
+            m_accept();
+        }
+        
+        //处理数据库更新任务
+        //
+    }
+    
+    close(epollfd);
+    INFO("Server work finish");
+}
 
 
 
