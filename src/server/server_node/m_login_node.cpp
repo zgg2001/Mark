@@ -53,10 +53,10 @@ m_login_node::close_node()
 }
 
 void 
-m_login_node::addclient(SOCKET sockfd)
+m_login_node::addclient(m_client_node* client)
 {
     std::lock_guard<std::mutex> lock(_mutex);
-    _clientbuf.push_back(sockfd);
+    _clientbuf.push_back(client);
 }
 
 void 
@@ -76,6 +76,10 @@ m_login_node::func_run(m_thread* thread)
     struct epoll_event events[EVENT_MAX_SIZE];
     int event_count;
 
+    //计时器->heartbeat
+    m_timer timer;
+    timer.update();
+
     //开始工作
     while(_thread.is_run())
     {
@@ -83,12 +87,15 @@ m_login_node::func_run(m_thread* thread)
         if(!_clientbuf.empty())
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            for(SOCKET client : _clientbuf)
+            for(m_client_node* client : _clientbuf)
             {
+                //epoll监听
                 memset(&ev, 0, sizeof(struct epoll_event));
-                ev.data.fd = client;
+                ev.data.fd = client->get_sockfd();
                 ev.events = EPOLLIN;
-                epoll_ctl(epollfd, EPOLL_CTL_ADD, client, &ev);
+                epoll_ctl(epollfd, EPOLL_CTL_ADD, client->get_sockfd(), &ev);
+                //加入正式队列
+                _clients[client->get_sockfd()] = client;
             }
             _clientbuf.clear();
         }
@@ -102,25 +109,46 @@ m_login_node::func_run(m_thread* thread)
             _thread.exit();
             break;
         }
-        if(event_count == 0)
-        {
-            //DEBUG("login_node(%d) epoll_wait() timeout", _login_id);
-            continue;
-        }
-        else//处理事件
+        //存在则处理事件
+        if(event_count > 0)
         {
             for(int i = 0; i < event_count; ++i)
             {
                 if(recvdata(events[i].data.fd) == -1)
-                {
-                    INFO("login_node(%d) socket:%d quit", 
-                         _login_id, events[i].data.fd);
+                { 
+                    //删除epoll事件监听
                     memset(&ev, 0, sizeof(struct epoll_event));
                     ev.data.fd = events[i].data.fd;
                     ev.events = EPOLLIN;
                     epoll_ctl(epollfd, EPOLL_CTL_DEL, events[i].data.fd, &ev);
+                    
+                    //释放客户端节点并移出队列
+                    delete _clients[events[i].data.fd];
+                    _clients.erase(events[i].data.fd);
                 }
             }
+        }
+        
+        //处理心跳检测
+        double time_interval = timer.get_sec();
+        timer.update();//更新时间
+        for(auto iter = _clients.begin(); iter != _clients.end();)
+        {
+            //检测心跳是否超时
+            if(iter->second->check_hb(time_interval) == true)
+            {
+                //删除epoll事件监听
+                memset(&ev, 0, sizeof(struct epoll_event));
+                ev.data.fd = iter->first;
+                ev.events = EPOLLIN;
+                epoll_ctl(epollfd, EPOLL_CTL_DEL, iter->first, &ev);
+                
+                //移出队列
+                delete iter->second;
+                _clients.erase(iter++);//避免迭代器失效
+                continue;
+            }
+            iter++;
         }
     }
 
@@ -148,8 +176,6 @@ m_login_node::recvdata(SOCKET sockfd)
     //
     return 0;
 }
-
-
 
 
 

@@ -8,7 +8,11 @@
 #ifndef _M_LOGIN_NODE_H_
 #define _M_LOGIN_NODE_H_
 
+#include<vector>
+#include<map>
 #include<mutex>
+#include<server/client_node/m_client_node.h>
+#include<public/time/m_timer.h>
 #include"m_base_node.h"
 
 class m_login_node : public m_base_node
@@ -21,7 +25,10 @@ public:
 public:
     m_login_node(int id, m_server* server);
     virtual ~m_login_node();
-    
+    m_login_node() = delete;
+    m_login_node(const m_login_node&) = delete;
+    m_login_node& operator= (const m_login_node&) = delete;
+
     /*
     * 启动与关闭登录节点
     */
@@ -31,7 +38,7 @@ public:
     /*
     * 添加新的监听socket
     */
-    void addclient(SOCKET sockfd);
+    void addclient(m_client_node* client);
 
 protected:
     virtual void func_create(m_thread* thread) override;
@@ -53,8 +60,10 @@ private:
 
     //锁
     std::mutex _mutex;
-    //监听队列缓冲区
-    std::vector<SOCKET> _clientbuf;
+    //监听队列及其缓冲区
+    std::vector<m_client_node*> _clientbuf;
+    std::unordered_map<SOCKET, m_client_node*> _clients;
+    
     //recv_buf
     char* _recv_buf;
 };
