@@ -18,18 +18,21 @@
 #include<string.h>
 #include<errno.h>
 
+#include<server/server_node/m_login_node.h>
 #include<public/log/log.h>
 
 class m_server
 {
 public:
     using SOCKET = int;
-	static constexpr SOCKET INVALID_SOCKET = (SOCKET)(~0);
-	static constexpr int SOCKET_ERROR = -1;
+    static constexpr SOCKET INVALID_SOCKET = (SOCKET)(~0);
+    static constexpr int SOCKET_ERROR = -1;
 
 public:
     m_server();
     virtual ~m_server();
+    m_server(const m_server&) = delete;
+    m_server& operator= (const m_server&) = delete;
 
     /* 
     * 初始化
@@ -65,6 +68,11 @@ public:
     void m_close();
 
     /*
+    * 启动登录节点
+    */
+    void m_start();
+
+    /*
     * 开始工作
     */
     void m_work();
@@ -73,6 +81,8 @@ private:
     //服务器socket
     SOCKET _sock;
 
+    //登录节点
+    m_login_node* _lnode;
 };
 
 #endif

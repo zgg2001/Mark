@@ -8,9 +8,11 @@
 #include"m_server.h"
 
 m_server::m_server():
-    _sock(INVALID_SOCKET)
+    _sock(INVALID_SOCKET),
+    _lnode(nullptr)
 {
-
+    //登录节点
+    _lnode = new m_login_node(0, this);
 }
 
 m_server::~m_server()
@@ -109,7 +111,8 @@ m_server::m_accept()
         return -1;
     }
     
-    //连接后操作
+    //连接后分配给登录节点
+    _lnode->addclient(new m_client_node(temp_socket));
     
     INFO("Server accept(%d) success from %s", 
          temp_socket, inet_ntoa(clientAddr.sin_addr));
@@ -119,7 +122,23 @@ m_server::m_accept()
 void
 m_server::m_close()
 {
+    if(_lnode != nullptr)
+        delete _lnode;
     close(_sock);
+}
+
+void
+m_server::m_start()
+{
+    if(_lnode != nullptr)
+    {
+        INFO("Server login_node start");
+        _lnode->start();
+    }
+    else
+    {
+        ERROR("Server login_node error -- not initialized");
+    }
 }
 
 void
@@ -147,7 +166,7 @@ m_server::m_work()
         }
         if(event_count == 0)
         {
-            DEBUG("Server epoll_wait() timeout"); 
+            //DEBUG("Server epoll_wait() timeout"); 
             continue;
         }
         else//处理新连接
