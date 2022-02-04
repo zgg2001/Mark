@@ -50,6 +50,36 @@ m_group_node::addclient(m_client_node* client)
     }
 }
 
+void 
+m_group_node::adduser(int u_id, const char* name, const char* email)
+{
+    bool ret;
+    ret = _group->adduser(u_id, std::string{name}, std::string{email});
+    if(ret == false)
+    {
+        ERROR("m_group_node adduser uid:%d name:%s error", u_id, name);
+    }
+}
+
+void 
+m_group_node::addplan(int p_id, int u_id, int status,
+                      int plan_id, int user_id,
+                      int create_t, int plan_t,
+                      const char* content_str, const char* remark_str)
+{
+    int ret;
+    ret = _group->addplan(p_id, u_id, status, plan_id, user_id, 
+                          create_t, plan_t, content_str, remark_str);
+    if(ret == -1)
+    {
+        ERROR("m_group_node addplan error -- 用户(%d)不存在", u_id);
+    }
+    else if(ret == -2)
+    {
+        ERROR("m_group_node addplan error -- 计划id(%d)重复", p_id);
+    }
+}
+
 void
 m_group_node::start()
 {

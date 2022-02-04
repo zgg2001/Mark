@@ -37,6 +37,19 @@ public:
     */
     void addclient(m_client_node* client);
 
+    /*
+    * 添加新用户
+    */
+    void adduser(int u_id, const char* name, const char* email);
+
+    /*
+    * 添加新计划
+    */
+    void addplan(int p_id, int u_id, int status,
+                 int plan_id, int user_id,
+                 int create_t, int plan_t,
+                 const char* content_str, const char* remark_str);
+
 protected:
     virtual void start() override;
     virtual void close_node() override;
