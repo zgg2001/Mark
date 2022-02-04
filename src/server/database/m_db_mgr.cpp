@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include"m_db_mgr.h"
+#include"../server/m_server.h"
 
 m_db_mgr::m_db_mgr(m_server* server):
     _server(server)
@@ -64,13 +65,51 @@ m_db_mgr::init(const char* host, const char* user,
         _db.exec(SQL_CREATE_USER_GROUP_TBL, &res, &row, &field);
         _db.exec(SQL_CREATE_USER_TBL, &res, &row, &field);
         
-        //root用户
-        _db.exec("insert into mark_user values (1, 'root', 'e10adc3949ba59abbe56e057f20f883e', '')", &res, &row, &field);
+        //root用户 初始密码123456
+        _db.exec("insert into mark_user values (1, 'root', 'e10adc3949ba59abbe56e057f20f883e', '')", &res, &row, &field); 
         return 1;
     }
     else if(num == 5)//数量正常 读表反序列化
     {
         INFO("m_db_mgr init 数据反序列化 start");
+        //读组
+        _db.exec(SQL_SELECT_GROUP_TBL, &res, &row, &field);
+        for(int i = 0; i < row; ++i)
+        {
+            int gid = atoi(res[i][0]);
+            int aid = atoi(res[i][2]);
+            _server->new_group_node(gid, res[i][1], aid);
+            DEBUG("new_group_node: gid:%d gname:%s aid:%d", gid, res[i][1], aid);
+        }
+        
+        //读用户
+        _db.exec(SQL_SELECT_USER_GROUP_TBL, &res, &row, &field);
+        for(int i = 0; i < row; ++i)
+        {
+            int uid = atoi(res[i][0]);
+            int gid = atoi(res[i][1]);
+            _server->new_group_user(gid, uid, res[i][2], res[i][3]);
+            DEBUG("new_group_user: gid:%d uid:%d name:%s", gid, uid, res[i][2]);
+        }
+        
+        //读计划
+        _db.exec(SQL_SELECT_PLAN_INFO_TBL, &res, &row, &field);
+        for(int i = 0; i < row; ++i)
+        {
+            int gid = atoi(res[i][2]);//计划的所属组id
+            int pid = atoi(res[i][3]);//组内id
+            int uid = atoi(res[i][1]);//所属用户id
+            int status = atoi(res[i][5]);//计划状态
+            int id = atoi(res[i][0]);//计划的主id
+            int cid = atoi(res[i][4]);//计划的创建者id
+            int ctime = atoi(res[i][6]);//创建计划的时间
+            int ptime = atoi(res[i][7]);//计划完成的时间
+            _server->new_group_plan(gid, pid, uid, status,
+                                    id, cid,
+                                    ctime, ptime,
+                                    res[i][8], res[i][9]);
+            DEBUG("new_group_plan: gid:%d pid:%d uid:%d", gid, pid, uid);
+        }
     }
     else//表数量异常
     {

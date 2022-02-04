@@ -17,7 +17,7 @@ class m_db_mgr
 {
 public:
     m_db_mgr(m_server* server);
-    ~m_db_mgr();
+    virtual ~m_db_mgr();
     m_db_mgr() = delete;
     m_db_mgr(const m_db_mgr&) = delete;
     m_db_mgr& operator= (const m_db_mgr&) = delete;
@@ -97,13 +97,42 @@ private:
 
     //用户表 建表语句
     static constexpr char SQL_CREATE_USER_TBL[] = "         \
-    create table `mark_user` (                              \
+    CREATE TABLE `mark_user` (                              \
     `user_id` smallint unsigned NOT NULL AUTO_INCREMENT,    \
     `user_name` varchar(50) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',    \
     `password` varchar(255) DEFAULT NULL,                   \
     `mail_address` varchar(255) DEFAULT NULL,               \
     PRIMARY KEY (`user_id`),                                \
     UNIQUE KEY (`user_name`));";
+
+    //查询组
+    static constexpr char SQL_SELECT_GROUP_TBL[] = "        \
+    SELECT                                                  \
+        *                                                   \
+    FROM                                                    \
+        mark_group;";
+
+    //查询用户-组
+    static constexpr char SQL_SELECT_USER_GROUP_TBL[] = "   \
+    SELECT                                                  \
+        u.user_id, g.group_id, u.user_name, u.mail_address  \
+    FROM                                                    \
+        mark_user as u                                      \
+    JOIN                                                    \
+        mark_user_group as g                                \
+    ON                                                      \
+        u.user_id = g.user_id;";
+
+    //查询计划信息
+    static constexpr char SQL_SELECT_PLAN_INFO_TBL[] = "    \
+    SELECT                                                  \
+        i.id, i.user_id, i.group_id, i.plan_id, p.create_user, p.status, p.create_time, p.plan_time, p.content, p.remark \
+    FROM                                                    \
+        mark_plan as p                                      \
+    JOIN                                                    \
+        mark_plan_info as i                                 \
+    ON                                                      \
+        p.id = i.id;";
 };
 
 #endif
