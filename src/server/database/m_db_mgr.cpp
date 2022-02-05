@@ -65,13 +65,26 @@ m_db_mgr::init(const char* host, const char* user,
         _db.exec(SQL_CREATE_USER_GROUP_TBL, &res, &row, &field);
         _db.exec(SQL_CREATE_USER_TBL, &res, &row, &field);
         
-        //root用户 初始密码123456
+        //root用户/组 初始密码123456
         _db.exec("insert into mark_user values (1, 'root', 'e10adc3949ba59abbe56e057f20f883e', '')", &res, &row, &field); 
-        return 1;
+        _db.exec("insert into mark_group values(1, 'root', 1);", &res, &row, &field);
+        _db.exec("insert into mark_user_group values(1, 1);", &res, &row, &field);
     }
-    else if(num == 5)//数量正常 读表反序列化
+    if(num == 0 || num == 5)//数量正常 读表反序列化
     {
         INFO("m_db_mgr init 数据反序列化 start");
+        //读用户信息_info
+        _db.exec(SQL_SELECT_USER_INFO, &res, &row, &field);
+        for(int i = 0; i < row; ++i)
+        {
+            int uid = atoi(res[i][0]);
+            int gid = atoi(res[i][1]);
+            std::string username {res[i][2]};
+            std::string passwd {res[i][3]};
+            _info_map[username] = _info {uid, gid, username, passwd};
+            DEBUG("new_user_info: uid:%d name:%s gid:%d", uid, username.c_str(), gid);
+        }
+        
         //读组
         _db.exec(SQL_SELECT_GROUP_TBL, &res, &row, &field);
         for(int i = 0; i < row; ++i)
@@ -117,5 +130,27 @@ m_db_mgr::init(const char* host, const char* user,
         return -3;
     }
 
-    return 0;
+    //若初始化返回1 否则返回0
+    return num == 0 ? 1 : 0;
 }
+
+std::pair<int, int> 
+m_db_mgr::login(std::string& name, std::string& passwd)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    std::pair<int, int> ret {-1, -1};
+
+    //登录成功
+    if(_info_map.count(name) && _info_map[name].password == passwd)
+    {
+        ret.first = _info_map[name].uid;
+        ret.second = _info_map[name].gid;
+        DEBUG("name:%s login success", name.c_str());
+    }
+    return ret;
+}
+
+
+
+
+

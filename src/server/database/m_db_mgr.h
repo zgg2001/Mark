@@ -8,6 +8,8 @@
 #ifndef _M_DB_MGR_H
 #define _M_DB_MGR_H
 
+#include<string>
+#include<unordered_map>
 #include<public/log/log.h>
 #include<public/database/m_db.h>
 
@@ -40,6 +42,19 @@ public:
     int init(const char* host, const char* user,
              const char* passwd);
 
+    /*
+    * 登录比对
+    *
+    * username: 用户名
+    * password: 密码
+    *
+    * 返回值:
+    * pair<uid, gid>
+    * 登录失败时uid = gid = -1
+    * 否则为用户的uid/gid
+    */
+    std::pair<int, int> login(std::string& name, std::string& passwd);
+
 private:
     //所属server
     m_server* _server;
@@ -49,6 +64,27 @@ private:
     
     //锁
     std::mutex _mutex;
+
+private:
+    //用户-密码结构体
+    struct _info
+    {
+        int uid;
+        int gid;
+        std::string username;
+        std::string password;
+        _info() {}
+        _info(int u, int g, std::string n, std::string w):
+            uid(u), gid(g), username(n), password(w) {}
+    };
+    using _info = struct _info;
+    
+    /*
+    * 此表内储存用户信息
+    * 键为用户名
+    * 值为结构体_info 其中储存uid、gid、用户名、密码
+    */
+    std::unordered_map<std::string, _info> _info_map;
 
 private:
     //查询mark库中有几张表
@@ -104,6 +140,17 @@ private:
     `mail_address` varchar(255) DEFAULT NULL,               \
     PRIMARY KEY (`user_id`),                                \
     UNIQUE KEY (`user_name`));";
+
+    //查询用户-密码
+    static constexpr char SQL_SELECT_USER_INFO[] = "        \
+    SELECT                                                  \
+        u.user_id, ug.group_id, u.user_name, u.password     \
+    FROM                                                    \
+        mark_user as u                                      \
+    JOIN                                                    \
+        mark_user_group as ug                               \
+    ON                                                      \
+        u.user_id = ug.user_id;";
 
     //查询组
     static constexpr char SQL_SELECT_GROUP_TBL[] = "        \
