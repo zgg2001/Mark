@@ -8,14 +8,26 @@
 #include"m_client.h"
 
 m_client::m_client():
-    _sock(INVALID_SOCKET)
+    _sock(INVALID_SOCKET),
+    _status(false),
+    _cl(nullptr),
+    _rnode(nullptr)
 {
-
+    _rnode = new m_recv_node(this);
 }
 
 m_client::~m_client()
 {
     m_close();
+    
+    delete _rnode;
+    close(_sock);
+    
+    if(_cl != nullptr)
+    {
+        cmdline_exit_free(_cl);
+        _cl = nullptr;
+    }
 }
 
 int 
@@ -34,7 +46,7 @@ m_client::m_init()
         return -1;
     }
 
-    INFO("Client init(%d) success", _sock);
+    DEBUG("Client init(%d) success", _sock);
     return 0;
 }
 
@@ -63,14 +75,40 @@ m_client::m_connect(const char* ip, unsigned short port)
         return -1;
 	}
     
-    INFO("Client connect(%d) success", _sock);
+    DEBUG("Client connect(%d) success", _sock);
+    _status = true;
     return 0; 
+}
+
+void 
+m_client::m_start()
+{
+    DEBUG("Client m_start start");
+    _rnode->set_sockfd(_sock);
+    _rnode->start();
+}
+
+void
+m_client::m_work()
+{
+    if(_status == false)
+        return;
+    printf("连接服务器... 成功\n");
+    
+    //新建命令行
+    _cl = cmdline_get_new(nullptr, "Mark>"); 
+    //开始交互工作
+    cmdline_start_interact(_cl);
+    //退出
+    cmdline_exit_free(_cl);
+    _cl = nullptr;
 }
 
 void 
 m_client::m_close()
 {
-    close(_sock);
+    DEBUG("Client m_close start");
+    _rnode->close_node();
 }
 
 

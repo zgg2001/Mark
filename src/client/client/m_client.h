@@ -14,11 +14,15 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<memory>
 
+#include<stdio.h>
 #include<string.h>
 #include<errno.h>
 
+#include<nice_cmd/cmdline.h>
 #include<public/log/log.h>
+#include<client/client_node/m_recv_node.h>
 
 class m_client
 {
@@ -34,28 +38,38 @@ public:
     m_client& operator= (const m_client&) = delete;
     
     /* 
-    * 初始化
-    * socket环境配置
+    * 环境初始化
     * 返回0为成功
     */
     int m_init();
 
     /*
     * 连接服务端
-    *   ip: 服务端ip
-    * port: 服务端端口
     * 返回0为成功
     */
     int m_connect(const char* ip, unsigned short port);
 
-    /*
-    * 关闭
-    */
+    //接收/发送线程开始工作
+    void m_start();
+    
+    //开始交互工作
+    void m_work();
+
+    //关闭client
     void m_close();
 
 private:
     //本机socket
     SOCKET _sock;
+
+    //连接状态
+    bool _status;
+
+    //交互式命令行
+    struct cmdline* _cl;
+
+    //接收节点
+    m_recv_node* _rnode;
 };
 
 #endif
