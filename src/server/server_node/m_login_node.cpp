@@ -17,7 +17,21 @@ m_login_node::m_login_node(int id,  m_server* server):
 m_login_node::~m_login_node()
 {
     DEBUG("login_node(%d) ~login_node() start", _login_id);
+    //关线程
     close_node();
+
+    //释放客户端
+    for(m_client_node* c : _clientbuf)
+    {
+        delete c;
+    }
+    for(auto& [s, c] : _clients)
+    {
+        delete c;
+    }
+    _clientbuf.clear();
+    _clients.clear();
+    
     delete[] _recv_buf;
     DEBUG("login_node(%d) ~login_node() end", _login_id);
 }

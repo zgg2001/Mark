@@ -30,7 +30,21 @@ m_group_node::m_group_node(int g_id, const char* g_name, int a_id, m_server* ser
 m_group_node::~m_group_node()
 {
     DEBUG("group_node(%d) ~group_node() start", _group_id);
+    //关线程
     close_node();
+    
+    //释放客户端
+    for(m_client_node* c : _clientbuf)
+    {
+        delete c;
+    }
+    for(auto& [s, c] : _clients)
+    {
+        delete c;
+    }
+    _clientbuf.clear();
+    _clients.clear();
+   
     delete _group;
     delete[] _recv_buf;
     DEBUG("group_node(%d) ~group_node() end", _group_id);
