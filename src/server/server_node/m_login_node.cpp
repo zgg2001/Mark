@@ -5,6 +5,7 @@
 	> Created Time: Thu 27 Jan 2022 07:45:02 PM CST
  ************************************************************************/
 
+#include<server/server/m_server.h>
 #include"m_login_node.h"
 
 m_login_node::m_login_node(int id,  m_server* server):
@@ -12,6 +13,7 @@ m_login_node::m_login_node(int id,  m_server* server):
     _server(server)
 {
     _recv_buf = new char[RECV_BUF_SIZE];
+    _tnode.id = id;
 }
 
 m_login_node::~m_login_node()
@@ -57,13 +59,16 @@ m_login_node::start()
             func_destory(&_thread);
         }
     );
+    //tnode
+    _tnode.start();
 }
 
 void
 m_login_node::close_node()
 {
     INFO("login_node(%d) thread close", _login_id);
-    _thread.close();
+    _thread.close(); 
+    _tnode.close_node();
 }
 
 void 
@@ -186,14 +191,54 @@ m_login_node::recvdata(SOCKET sockfd)
         return -1;
     }
 
-    //操作
-    //
+    //操作-仅处理登录包
+    header* ph = (header*)_recv_buf;
+    if(buf_len < sizeof(header) || buf_len < ph->length)//防止半包
+    {
+        //这个部分回来还得用客户端二级缓冲 否则会丢包 稍后处理
+        return 1;
+    }
+
+    //处理
+    if(ph->cmd == CMD_LOGIN)
+    {
+        login* pl = (login*)ph;
+        std::pair<int, int> ret; 
+        ret = _server->login(pl->username, pl->password);
+        DEBUG("login request(%d) n:%s", sockfd, pl->username);
+        
+        if(ret.first == -1)//failed
+        {
+            INFO("login request(%d) n:%s failed", sockfd, pl->username);
+            _tnode.addtask([this, sockfd]() 
+	        {
+                this->send_loginresult(sockfd, -1);
+            });
+        }
+        else//success
+        {
+            INFO("login request(%d) n:%s success", sockfd, pl->username); 
+            _tnode.addtask([this, sockfd]() 
+	        {
+                this->send_loginresult(sockfd, 0);
+            });
+            //登录成功的操作 -> 客户端节点login -> 转移至group_node
+        }
+    }
+    else
+    {
+        WARN("login_node 收到非登录包");
+    }
+
     return 0;
 }
 
-
-
-
-
+void 
+m_login_node::send_loginresult(SOCKET sockfd, int ret)
+{
+    login_result lr;
+    lr.result = ret;
+    send(sockfd, (const char*)&lr, sizeof(lr), 0);
+}
 
 

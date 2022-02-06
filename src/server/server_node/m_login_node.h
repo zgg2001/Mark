@@ -13,7 +13,9 @@
 #include<mutex>
 #include<server/client_node/m_client_node.h>
 #include<public/time/m_timer.h>
+#include<public/datagram/m_datagram.h>
 #include"m_base_node.h"
+#include"m_task_node.h"
 
 class m_login_node : public m_base_node
 {
@@ -51,6 +53,14 @@ private:
     * 返回-1为客户端退出
     */
     int recvdata(SOCKET sockfd);
+    
+    /*
+    * 发送登录结果包
+    *
+    * sockfd: 目标sockfd
+    *    ret: 结果 -1失败 0成功
+    */
+    void send_loginresult(SOCKET sockfd, int ret); 
 
 private:
     //id
@@ -66,6 +76,9 @@ private:
     
     //recv_buf
     char* _recv_buf;
+
+    //所属task节点
+    m_task_node _tnode;
 };
 
 #endif
