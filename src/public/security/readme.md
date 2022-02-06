@@ -25,3 +25,32 @@ e10adc3949ba59abbe56e057f20f883e
 ```
 一个简单例程。
 
+# m_noecho
+&emsp;&emsp;此类是为了不明文显示输入而创建的。</br>
+&emsp;&emsp;此类主要通过 `struct termios` 的相关设置实现，从而禁止输入回显。
+
+**使用说明：**
+```
+/*
+* 设置无回显输入模式
+*/
+void noecho();
+
+/*
+* 恢复
+*/
+void recover();
+```
+使用如上方法来开启/关闭 `NO_ECHO` 模式。
+```
+m_noecho noec;
+std::string passwd;
+
+printf("password: ");
+noec.noecho();
+std::cin >> passwd;
+printf("\n");
+noec.recover();
+```
+一个简单应用场景。
+
