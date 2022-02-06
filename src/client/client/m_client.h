@@ -16,12 +16,17 @@
 #include<arpa/inet.h>
 #include<memory>
 
+#include<iostream>
+#include<string>
 #include<stdio.h>
 #include<string.h>
 #include<errno.h>
 
 #include<nice_cmd/cmdline.h>
 #include<public/log/log.h>
+#include<public/security/m_md5.h>
+#include<public/security/m_noecho.h>
+#include<public/datagram/m_datagram.h>
 #include<client/client_node/m_recv_node.h>
 
 class m_client
@@ -58,12 +63,25 @@ public:
     //关闭client
     void m_close();
 
+    /*
+    * 登录部分
+    */
+    bool m_login();
+    void m_login_wake();
+    void set_login_ret(int ret) { _login_ret = ret; }
+
 private:
     //本机socket
     SOCKET _sock;
 
     //连接状态
     bool _status;
+
+    //阻塞信号量
+    m_semaphore _sem;
+    
+    //报文结果
+    int _login_ret;
 
     //交互式命令行
     struct cmdline* _cl;

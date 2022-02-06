@@ -6,10 +6,12 @@
  ************************************************************************/
 
 #include"m_client.h"
+#include"m_cmd.h"
 
 m_client::m_client():
     _sock(INVALID_SOCKET),
     _status(false),
+    _login_ret(-1),
     _cl(nullptr),
     _rnode(nullptr)
 {
@@ -18,6 +20,7 @@ m_client::m_client():
 
 m_client::~m_client()
 {
+    DEBUG("Client ~m_client start");
     m_close();
     
     delete _rnode;
@@ -28,6 +31,7 @@ m_client::~m_client()
         cmdline_exit_free(_cl);
         _cl = nullptr;
     }
+    DEBUG("Client ~m_client end");
 }
 
 int 
@@ -36,13 +40,13 @@ m_client::m_init()
     //创建socket
     if(_sock != INVALID_SOCKET)//存在socket
     {
-        WARN("Client init warn -- socket:%d already exists", _sock);
+        DEBUG("Client init warn -- socket:%d already exists", _sock);
         m_close();
     }
     _sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if(_sock == INVALID_SOCKET)
     {
-        ERROR("Client init faild -- %s", strerror(errno));
+        DEBUG("Client init faild -- %s", strerror(errno));
         return -1;
     }
 
@@ -56,24 +60,24 @@ m_client::m_connect(const char* ip, unsigned short port)
     //无效套接字
     if(_sock == INVALID_SOCKET)
     {
-        WARN("Client bind warn -- client socket not initialized");
+        DEBUG("Client bind warn -- client socket not initialized");
         m_init();
     }
 
     //配置
-   	sockaddr_in _sin = {};
-   	_sin.sin_family = AF_INET;//IPV4
-   	_sin.sin_port = htons(port);//端口
-	_sin.sin_addr.s_addr = inet_addr(ip);//IP
+    sockaddr_in _sin = {};
+    _sin.sin_family = AF_INET;//IPV4
+    _sin.sin_port = htons(port);//端口
+    _sin.sin_addr.s_addr = inet_addr(ip);//IP
 
     //connect
     int ret = connect(_sock, (sockaddr*)&_sin, sizeof(sockaddr_in));
-	if(ret == SOCKET_ERROR)
-	{
-        ERROR("Client connect(%d) ip:%s port:%d faild -- %s", _sock, ip, port, strerror(errno));
+    if(ret == SOCKET_ERROR)
+    {
+        DEBUG("Client connect(%d) ip:%s port:%d faild -- %s", _sock, ip, port, strerror(errno));
         close(_sock);
         return -1;
-	}
+    }
     
     DEBUG("Client connect(%d) success", _sock);
     _status = true;
@@ -92,11 +96,22 @@ void
 m_client::m_work()
 {
     if(_status == false)
+    {
+        printf("connect... failed\n");
         return;
-    printf("连接服务器... 成功\n");
-    
+    }
+    printf("connect... success\n");
+   
+    //登录
+    if(m_login() == false)
+    {
+        printf("login... failed\n");
+        return;
+    }
+    printf("login... success\n");
+
     //新建命令行
-    _cl = cmdline_get_new(nullptr, "Mark>"); 
+    _cl = cmdline_get_new(main_ctx, "Mark> "); 
     //开始交互工作
     cmdline_start_interact(_cl);
     //退出
@@ -110,5 +125,51 @@ m_client::m_close()
     DEBUG("Client m_close start");
     _rnode->close_node();
 }
+
+bool 
+m_client::m_login()
+{
+    m_noecho noec;
+
+    std::string name, passwd;
+    printf("login as: ");
+    std::cin >> name;
+    for(int i = 0; i < 3; ++i)
+    {
+        //接收
+        printf("%s's password: ", name.c_str());
+        noec.noecho();
+        std::cin >> passwd;
+        printf("\n");
+        noec.recover();
+        passwd = m_md5::md5sum(passwd);
+        
+        //发包
+        login l;
+        snprintf(l.username, 34, "%s", name.c_str());
+        snprintf(l.password, 34, "%s", passwd.c_str());
+        send(_sock,(const char*)&l, sizeof(l), 0); 
+        
+        //阻塞等结果
+        _login_ret = -1;
+        _sem.wait();
+        
+        //ret
+        if(_login_ret == 0)
+        {
+            return true;
+        }
+        printf("Access denied\n");
+    }
+    return false;
+}
+
+void 
+m_client::m_login_wake()
+{
+    _sem.wakeup();
+}
+
+
 
 
