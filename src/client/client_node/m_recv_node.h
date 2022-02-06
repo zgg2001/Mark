@@ -8,6 +8,7 @@
 #ifndef _M_RECV_NODE_H_
 #define _M_RECV_NODE_H_
 
+#include<public/datagram/m_datagram.h>
 #include"m_base_node.h"
 
 class m_client;

@@ -5,6 +5,7 @@
 	> Created Time: Fri 04 Feb 2022 09:40:01 AM CST
  ************************************************************************/
 
+#include<client/client/m_client.h>
 #include"m_recv_node.h"
 
 m_recv_node::m_recv_node(m_client* client):
@@ -17,8 +18,10 @@ m_recv_node::m_recv_node(m_client* client):
 
 m_recv_node::~m_recv_node()
 {
+    DEBUG("recv_node ~ start");
     close_node();
     delete[] _recv_buf;
+    DEBUG("recv_node ~ end");
 }
 
 void
@@ -81,7 +84,7 @@ m_recv_node::func_run(m_thread* thread)
     {
         //epoll监听新连接
         struct epoll_event events;
-        int event_count = epoll_wait(epollfd, &events, 1, -1);//阻塞 
+        int event_count = epoll_wait(epollfd, &events, 1, 1);//阻塞 
         if(event_count < 0)
         {
             ERROR("recv_node epoll_wait() error -- %s", strerror(errno));
@@ -117,6 +120,26 @@ m_recv_node::recvdata()
     }
 
     //操作
-    //
+    header* ph = (header*)_recv_buf;
+    if(buf_len < sizeof(header) || buf_len < ph->length)//防止半包
+    {
+        //这个部分回来还得用客户端二级缓冲 否则会丢包 稍后处理
+        return 1;
+    }
+
+    //处理
+    if(ph->cmd == CMD_LOGIN_RESULT)
+    {
+        login_result* plr = (login_result*)ph;
+        //设置ret并唤醒
+        _client->set_login_ret(plr->result);
+        _client->m_login_wake(); 
+    }
+    else
+    {
+        WARN("login_node 收到非登录包");
+    }
+    
+    
     return 0;
 }
