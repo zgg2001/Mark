@@ -12,6 +12,7 @@
 #include<string>
 #include<string.h>
 
+#include<public/time/m_timer.h>
 #include<public/datagram/m_datagram.h>
 #include"m_base_node.h"
 

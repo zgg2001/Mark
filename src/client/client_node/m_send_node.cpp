@@ -73,8 +73,24 @@ void
 m_send_node::func_run(m_thread* thread)
 {
     DEBUG("task_node func_run() start");
+    
+    //计时器->发心跳包
+    m_timer timer;
+    timer.update();
+    double mytimer = 0.0;
+    
     while(_thread.is_run())
     {
+        //心跳包 5秒一发
+        mytimer += timer.get_sec();
+        timer.update();
+        if(mytimer >= 5.0)
+        {
+            c2s_heart h;
+            send(_sockfd, (const char*)&h, sizeof(h), 0);
+            mytimer = 0.0;
+        }
+        
         //将缓冲区内数据加入 
         if(!_tasksbuf.empty()) 
         {
