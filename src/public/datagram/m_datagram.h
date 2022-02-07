@@ -13,6 +13,8 @@
 */
 enum cmd
 {
+    CMD_C2S_HEART,      //心跳 client to server
+    CMD_S2C_HEART,      //心跳 server to client
     CMD_LOGIN,          //登录 
     CMD_LOGIN_RESULT,   //登录结果 
 };
@@ -26,6 +28,30 @@ struct header
 {
     short cmd;
     short length;
+};
+
+/*
+* 心跳报文 C2S
+*/
+struct c2s_heart : public header
+{
+    c2s_heart()
+    {
+        this->cmd = CMD_C2S_HEART;
+        this->length = sizeof(c2s_heart);
+    }
+};
+
+/*
+* 心跳报文 S2C
+*/
+struct s2c_heart : public header
+{
+    s2c_heart()
+    {
+        this->cmd = CMD_S2C_HEART;
+        this->length = sizeof(s2c_heart);
+    }
 };
 
 /*

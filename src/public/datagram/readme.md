@@ -22,6 +22,8 @@ struct header
 */
 enum cmd
 {
+    CMD_C2S_HEART,      //心跳 client to server
+    CMD_S2C_HEART,      //心跳 server to client
     CMD_LOGIN,          //登录 
     CMD_LOGIN_RESULT,   //登录结果 
 };
