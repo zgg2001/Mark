@@ -133,7 +133,8 @@ m_login_node::func_run(m_thread* thread)
         {
             for(int i = 0; i < event_count; ++i)
             {
-                if(recvdata(events[i].data.fd) == -1)
+                int ret = recvdata(events[i].data.fd);
+                if(ret != 0)
                 { 
                     //删除epoll事件监听
                     memset(&ev, 0, sizeof(struct epoll_event));
@@ -141,8 +142,16 @@ m_login_node::func_run(m_thread* thread)
                     ev.events = EPOLLIN;
                     epoll_ctl(epollfd, EPOLL_CTL_DEL, events[i].data.fd, &ev);
                     
-                    //释放客户端节点并移出队列
-                    delete _clients[events[i].data.fd];
+                    //处理client_node
+                    if(ret == -1 || ret == -2)//退出 / error
+                    {
+                        delete _clients[events[i].data.fd];
+                    }
+                    else if(ret == 1)//登录
+                    {
+                        _clients[events[i].data.fd]->reset_hb();//心跳重置
+                        _server->node_login(ret, _clients[events[i].data.fd]);//分配至group_node
+                    }
                     _clients.erase(events[i].data.fd);
                 }
             }
@@ -183,6 +192,7 @@ m_login_node::func_destory(m_thread* thread)
 int 
 m_login_node::recvdata(SOCKET sockfd)
 {
+    m_client_node* client = _clients[sockfd];
     int buf_len = recv(sockfd, _recv_buf, RECV_BUF_SIZE, 0);
     
     //退出
@@ -191,43 +201,58 @@ m_login_node::recvdata(SOCKET sockfd)
         return -1;
     }
 
-    //操作-仅处理登录包
-    header* ph = (header*)_recv_buf;
-    if(buf_len < sizeof(header) || buf_len < ph->length)//防止半包
+    //内容转至二级缓冲
+    memcpy(client->get_recvbuf() + client->get_recvlen(), _recv_buf, buf_len);
+    client->set_recvlen(client->get_recvlen() + buf_len);
+    
+    //正常情况下只会收到登陆包/心跳包
+    while(client->get_recvlen() >= (int)sizeof(header))
     {
-        //这个部分回来还得用客户端二级缓冲 否则会丢包 稍后处理
-        return 1;
-    }
-
-    //处理
-    if(ph->cmd == CMD_LOGIN)
-    {
-        login* pl = (login*)ph;
-        std::pair<int, int> ret; 
-        ret = _server->login(pl->username, pl->password);
-        DEBUG("login request(%d) n:%s", sockfd, pl->username);
+        //不完整包
+        header* ph = (header*)client->get_recvbuf();
+        if(client->get_recvlen() < ph->length)
+        {
+            return 0;
+        }
         
-        if(ret.first == -1)//failed
+        //处理
+        if(ph->cmd == CMD_LOGIN)
         {
-            INFO("login request(%d) n:%s failed", sockfd, pl->username);
-            _tnode.addtask([this, sockfd]() 
-	        {
-                this->send_loginresult(sockfd, -1);
-            });
+            login* pl = (login*)ph;
+            std::pair<int, int> ret; 
+            ret = _server->login(pl->username, pl->password);
+            DEBUG("login request(%d) n:%s", sockfd, pl->username);
+            
+            if(ret.first == -1)//failed
+            {
+                INFO("login request(%d) n:%s failed", sockfd, pl->username);
+                _tnode.addtask([this, sockfd]() 
+                {
+                    this->send_loginresult(sockfd, -1);
+                });
+            }
+            else//success
+            {
+                INFO("login request(%d) n:%s success", sockfd, pl->username); 
+                _tnode.addtask([this, sockfd]() 
+	            {
+                    this->send_loginresult(sockfd, 0);
+                });
+                //操作
+                _clients[sockfd]->login(ret.first, ret.second);
+                return ret.second;
+            }
         }
-        else//success
+        else
         {
-            INFO("login request(%d) n:%s success", sockfd, pl->username); 
-            _tnode.addtask([this, sockfd]() 
-	        {
-                this->send_loginresult(sockfd, 0);
-            });
-            //登录成功的操作 -> 客户端节点login -> 转移至group_node
+            ERROR("login_node 收到非登录包");
+            return -2;
         }
-    }
-    else
-    {
-        WARN("login_node 收到非登录包");
+        
+        //消息前移
+        int size = client->get_recvlen() - ph->length;//未处理size
+        memcpy(client->get_recvbuf(), client->get_recvbuf() + ph->length, size);
+        client->set_recvlen(size);
     }
 
     return 0;

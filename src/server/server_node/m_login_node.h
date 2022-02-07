@@ -50,7 +50,10 @@ protected:
 private:
     /*
     * 处理客户端消息
+    * 返回-2为error
     * 返回-1为客户端退出
+    * 返回 0为登录失败/半包
+    * 返回>0为客户端登录成功 ret为所属gid
     */
     int recvdata(SOCKET sockfd);
     
