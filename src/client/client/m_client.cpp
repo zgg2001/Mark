@@ -8,6 +8,11 @@
 #include"m_client.h"
 #include"m_cmd.h"
 
+/* 静态成员初始化 */
+m_client* m_client::_instance = nullptr;
+std::mutex m_client::_lock;
+m_client::deletor m_client::del;
+
 m_client::m_client():
     _sock(INVALID_SOCKET),
     _status(false),
@@ -16,6 +21,7 @@ m_client::m_client():
     _rnode(nullptr)
 {
     _rnode = new m_recv_node(this);
+    _snode = new m_send_node(this);
 }
 
 m_client::~m_client()
@@ -24,6 +30,7 @@ m_client::~m_client()
     m_close();
     
     delete _rnode;
+    delete _snode;
     close(_sock);
     
     if(_cl != nullptr)
@@ -90,6 +97,8 @@ m_client::m_start()
     DEBUG("Client m_start start");
     _rnode->set_sockfd(_sock);
     _rnode->start();
+    _snode->set_sockfd(_sock);
+    _snode->start();
 }
 
 void
@@ -124,6 +133,15 @@ m_client::m_close()
 {
     DEBUG("Client m_close start");
     _rnode->close_node();
+    _snode->close_node();
+}
+
+void
+m_client::m_exit()
+{
+    if(_cl != nullptr)
+        cmdline_quit(_cl);
+    //exit(1);
 }
 
 bool 
@@ -143,12 +161,9 @@ m_client::m_login()
         printf("\n");
         noec.recover();
         passwd = m_md5::md5sum(passwd);
-        
-        //发包
-        login l;
-        snprintf(l.username, 34, "%s", name.c_str());
-        snprintf(l.password, 34, "%s", passwd.c_str());
-        send(_sock,(const char*)&l, sizeof(l), 0); 
+       
+        //新增send task
+        _snode->send_login_data(name, passwd);
         
         //阻塞等结果
         _login_ret = -1;

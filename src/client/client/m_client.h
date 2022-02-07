@@ -19,6 +19,7 @@
 #include<iostream>
 #include<string>
 #include<stdio.h>
+#include<stdlib.h>
 #include<string.h>
 #include<errno.h>
 
@@ -26,8 +27,8 @@
 #include<public/log/log.h>
 #include<public/security/m_md5.h>
 #include<public/security/m_noecho.h>
-#include<public/datagram/m_datagram.h>
 #include<client/client_node/m_recv_node.h>
+#include<client/client_node/m_send_node.h>
 
 class m_client
 {
@@ -37,10 +38,21 @@ public:
     static constexpr int SOCKET_ERROR = -1;
 
 public:
-    m_client();
-    virtual ~m_client();
-    m_client(const m_client&) = delete;
-    m_client& operator= (const m_client&) = delete;
+    /*
+    * 获取实例
+    */
+    static m_client* ins()
+    {
+        if(_instance == nullptr)
+        {
+            std::lock_guard<std::mutex> lock(_lock);
+            if(_instance == nullptr)
+            {
+                _instance = new m_client();
+            }
+        }
+        return _instance;
+    }
     
     /* 
     * 环境初始化
@@ -63,12 +75,26 @@ public:
     //关闭client
     void m_close();
 
+    //进程exit
+    void m_exit();
+
     /*
     * 登录部分
     */
     bool m_login();
     void m_login_wake();
     void set_login_ret(int ret) { _login_ret = ret; }
+
+private:
+    m_client();
+    virtual ~m_client();
+    m_client(const m_client&) = delete;
+    m_client& operator= (const m_client&) = delete;
+
+private:
+    //实例相关
+    static m_client* _instance;
+    static std::mutex _lock;
 
 private:
     //本机socket
@@ -88,6 +114,22 @@ private:
 
     //接收节点
     m_recv_node* _rnode;
+    
+    //发送节点
+    m_send_node* _snode;
+
+private:
+    //删除器 退出自动释放实例
+    class deletor
+    {
+    public:
+        ~deletor()
+        {
+            if(_instance != nullptr)
+                delete _instance;
+        }
+    };
+    static deletor del;
 };
 
 #endif
