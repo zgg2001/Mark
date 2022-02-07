@@ -243,6 +243,15 @@ m_login_node::recvdata(SOCKET sockfd)
                 return ret.second;
             }
         }
+        else if(ph->cmd == CMD_C2S_HEART)
+        {
+            //send s2c_heart
+            _tnode.addtask([this, sockfd]()
+            {
+                this->send_s2c_heart(sockfd);
+            });
+            //不重置心跳
+        }
         else
         {
             ERROR("login_node 收到非登录包");
@@ -265,5 +274,14 @@ m_login_node::send_loginresult(SOCKET sockfd, int ret)
     lr.result = ret;
     send(sockfd, (const char*)&lr, sizeof(lr), 0);
 }
+
+void 
+m_login_node::send_s2c_heart(SOCKET sockfd)
+{
+    s2c_heart h;
+    send(sockfd, (const char*)&h, sizeof(h), 0);
+}
+
+
 
 

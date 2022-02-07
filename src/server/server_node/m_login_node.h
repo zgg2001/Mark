@@ -64,6 +64,11 @@ private:
     *    ret: 结果 -1失败 0成功
     */
     void send_loginresult(SOCKET sockfd, int ret); 
+    
+    /*
+    * 发送s2c心跳包
+    */
+    void send_s2c_heart(SOCKET sockfd);
 
 private:
     //id
