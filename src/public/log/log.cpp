@@ -33,7 +33,8 @@ log::log():
     _pid = getpid();
 }
 
-void log::set_path(const char* log_dir, const char* log_filename,int level)
+void 
+log::set_path(const char* log_dir, const char* log_filename,int level)
 {
     //lock
     std::lock_guard<std::mutex>lock(_lock);
@@ -46,8 +47,8 @@ void log::set_path(const char* log_dir, const char* log_filename,int level)
     }
     else
     {
-        strncpy(_log_dir, log_dir, LOG_DIR_MAX_SIZE);
-        strncpy(_log_filename, log_filename, LOG_FILENAME_MAX_SIZE);
+        snprintf(_log_dir, LOG_DIR_MAX_SIZE, "%s", log_dir);
+        snprintf(_log_filename, LOG_FILENAME_MAX_SIZE, "%s", log_filename);
         
         //创建log_dir并检测其是否 存在 且 可写
         mkdir(_log_dir, LOG_DIR_PERMISSION);
@@ -78,7 +79,8 @@ void log::set_path(const char* log_dir, const char* log_filename,int level)
     }
 }
 
-void log::set_level(int level)
+void 
+log::set_level(int level)
 {
     //lock
     std::lock_guard<std::mutex>lock(_lock);
@@ -97,7 +99,8 @@ void log::set_level(int level)
     } 
 }
 
-void log::log_write(const char* prev_str, const char* format, ...)
+void 
+log::log_write(const char* prev_str, const char* format, ...)
 {
     char log_buf[LOG_BUF_MAX_SIZE];
     int log_len = 0;

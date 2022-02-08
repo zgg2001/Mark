@@ -13,7 +13,8 @@ m_semaphore::m_semaphore():
 {
 }
 
-void m_semaphore::wait()
+void 
+m_semaphore::wait()
 {
     std::unique_lock<std::mutex> lock(_mutex);
     if(--_wait < 0)
@@ -27,7 +28,8 @@ void m_semaphore::wait()
     }
 }
 
-void m_semaphore::wakeup()
+void 
+m_semaphore::wakeup()
 {
     std::lock_guard<std::mutex> lock(_mutex);
     if(++_wait <= 0)

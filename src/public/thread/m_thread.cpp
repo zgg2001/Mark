@@ -16,7 +16,8 @@ m_thread::m_thread():
 {
 }
 
-void m_thread::start(event create, event run, event destory)
+void 
+m_thread::start(event create, event run, event destory)
 {
     std::lock_guard<std::mutex> lock(_mutex);
     if(!_state)
@@ -35,7 +36,8 @@ void m_thread::start(event create, event run, event destory)
     }
 }
 
-void m_thread::close()
+void 
+m_thread::close()
 {
     std::lock_guard<std::mutex> lock(_mutex);
     if(_state)
@@ -45,7 +47,8 @@ void m_thread::close()
     }
 }
 
-void m_thread::exit()
+void 
+m_thread::exit()
 {
     std::lock_guard<std::mutex> lock(_mutex);
     if(_state)
@@ -55,12 +58,14 @@ void m_thread::exit()
     }
 }
 
-bool m_thread::is_run()
+bool 
+m_thread::is_run()
 {
     return _state;
 }
 
-void m_thread::work()
+void 
+m_thread::work()
 {
     //创建
     if(_create)

@@ -10,7 +10,6 @@
 
 #include<vector>
 #include<mutex>
-#include<public/log/log.h>
 #include<mysql/mysql.h>
 
 class m_db
@@ -29,10 +28,13 @@ public:
     *  passwd: 登录密码
     * db_name: 数据库名
     *
-    * 连接成功返回true
+    * 返回值:
+    *   -2 : 失败 -- MYSQL对象为空(mysql_init error)
+    *   -1 : 失败 -- connect失败
+    *    0 : 成功
     */
-    bool connect(const char* host, const char* user, 
-                 const char* passwd, const char* db_name);
+    int connect(const char* host, const char* user, 
+                const char* passwd, const char* db_name);
 
     /*
     * 执行指定sql语句
@@ -51,7 +53,6 @@ public:
 private:
     std::mutex _lock;
     MYSQL* _mysql;
-
 };
 
 #endif

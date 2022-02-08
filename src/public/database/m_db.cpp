@@ -11,12 +11,6 @@ m_db::m_db():
     _mysql(nullptr)
 {
     _mysql = mysql_init(nullptr);
-    if(_mysql == nullptr)
-    {
-        ERROR("MySql init error");
-        exit(1);
-    }
-    DEBUG("MySql init success");
 }
 
 m_db::~m_db()
@@ -27,21 +21,22 @@ m_db::~m_db()
     }
 }
 
-bool 
+int 
 m_db::connect(const char* host, const char* user, 
               const char* passwd, const char* db_name)
 {
     //lock
     std::lock_guard<std::mutex>lock(_lock);
+    
+    if(_mysql == nullptr)
+        return -2;
 
     _mysql = mysql_real_connect(_mysql, host, user, passwd, db_name, 0, NULL, 0);
     if(_mysql == nullptr)
     {
-        ERROR("MySql connect error");
-        return false;
+        return -1;
     }
-    DEBUG("MySql connect success");
-    return true;
+    return 0;
 }
 
 int 
@@ -52,11 +47,8 @@ m_db::exec(const char* sql, std::vector<char**>* res, int* num_rows, int* num_fi
     
     if(mysql_query(_mysql, sql))
     {
-        ERROR("MySql exec error: %s", mysql_error(_mysql));
         return -1;
     }
-    
-    DEBUG("MySql exec success");
     
     //获取结果并储存
     result = mysql_store_result(_mysql);
@@ -70,15 +62,13 @@ m_db::exec(const char* sql, std::vector<char**>* res, int* num_rows, int* num_fi
         for(int i = 0; i < *num_rows; ++i)
         {
             row = mysql_fetch_row(result);
-            if(row < 0)
+            if(row == nullptr)
                 break;
             res->push_back(row);
         }
-        DEBUG("MySql exec have result return");
         return 0;
     }
 
-    DEBUG("MySql exec no result return");
     return 1;
 }
 

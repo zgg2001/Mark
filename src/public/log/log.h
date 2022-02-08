@@ -72,7 +72,7 @@ public:
 private:
     log();
     log(const log&) = delete;
-    const log& operator = (const log&) = delete;
+    log& operator= (const log&) = delete;
 
     //pid
     pid_t _pid;
