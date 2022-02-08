@@ -8,14 +8,16 @@
 #ifndef _M_GROUP_NODE_H_
 #define _M_GROUP_NODE_H_
 
+#include<string.h>
 #include<vector>
 #include<map>
 #include<mutex>
 #include<server/client_node/m_client_node.h>
-#include<public/time/m_timer.h>
 #include<server/data/m_group.h>
-#include<string.h>
+#include<public/time/m_timer.h>
+#include<public/datagram/m_datagram.h>
 #include"m_base_node.h"
+#include"m_task_node.h"
 
 class m_group_node : protected m_base_node
 {
@@ -60,9 +62,14 @@ protected:
 private:
     /*
     * 处理客户端消息
-    * 返回-1为客户端退出
+    * 返回-1为客户端退出/收到非法包
     */
     int recvdata(SOCKET sockfd);
+    
+    /*
+    * 发送s2c心跳包
+    */
+    void send_s2c_heart(SOCKET sockfd);
 
 private:
     //所属server
@@ -88,6 +95,9 @@ private:
 
     //recv_buf
     char* _recv_buf;
+    
+    //所属task节点
+    m_task_node _tnode;
 };
 
 #endif

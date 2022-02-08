@@ -25,6 +25,8 @@ m_group_node::m_group_node(int g_id, const char* g_name, int a_id, m_server* ser
     
     //recv_buf初始化
     _recv_buf = new char[RECV_BUF_SIZE];
+
+    _tnode.id = g_id;
 }
 
 m_group_node::~m_group_node()
@@ -115,6 +117,8 @@ m_group_node::start()
             func_destory(&_thread);
         }
     );
+    //tnode
+    _tnode.start();
 }
 
 void
@@ -122,6 +126,7 @@ m_group_node::close_node()
 {
     INFO("group_node(%d) thread close", _group_id);
     _thread.close();
+    _tnode.close_node();
 }
 
 void 
@@ -179,6 +184,7 @@ m_group_node::func_run(m_thread* thread)
             {
                 if(recvdata(events[i].data.fd) == -1)
                 { 
+                    std::lock_guard<std::mutex> lock(_mutex);
                     //删除epoll事件监听
                     memset(&ev, 0, sizeof(struct epoll_event));
                     ev.data.fd = events[i].data.fd;
@@ -203,6 +209,7 @@ m_group_node::func_run(m_thread* thread)
             //检测心跳是否超时
             if(iter->second->check_hb(time_interval) == true)
             {
+                std::lock_guard<std::mutex> lock(_mutex);
                 //删除epoll事件监听
                 memset(&ev, 0, sizeof(struct epoll_event));
                 ev.data.fd = iter->first;
@@ -223,7 +230,9 @@ m_group_node::func_run(m_thread* thread)
         //当不存在监听客户端节点时 则关闭工作线程
         if(_client_num == 0)
         {
-            close_node();
+            INFO("group_node(%d) thread exit", _group_id);
+            _thread.exit();
+            _tnode.close_node();
         }
     }
 
@@ -239,6 +248,7 @@ m_group_node::func_destory(m_thread* thread)
 int 
 m_group_node::recvdata(SOCKET sockfd)
 {
+    m_client_node* client = _clients[sockfd];
     int buf_len = recv(sockfd, _recv_buf, RECV_BUF_SIZE, 0);
 
     //退出
@@ -246,13 +256,53 @@ m_group_node::recvdata(SOCKET sockfd)
     {
         return -1;
     }
-
-    //操作
-    //
+    
+    //内容转至二级缓冲
+    memcpy(client->get_recvbuf() + client->get_recvlen(), _recv_buf, buf_len);
+    client->set_recvlen(client->get_recvlen() + buf_len);
+    
+    //处理
+    while(client->get_recvlen() >= (int)sizeof(header))
+    {
+        //不完整包
+        header* ph = (header*)client->get_recvbuf();
+        if(client->get_recvlen() < ph->length)
+        {
+            return 0;
+        }
+        
+        //处理
+        if(ph->cmd == CMD_C2S_HEART)
+        {
+            //send s2c_heart
+            _tnode.addtask([this, sockfd]()
+            {
+                this->send_s2c_heart(sockfd);
+            });
+            //心跳重置
+            client->reset_hb();
+        }
+        else
+        {
+            ERROR("login_node 收到非法包");
+            return -1;
+        }
+        
+        //消息前移
+        int size = client->get_recvlen() - ph->length;//未处理size
+        memcpy(client->get_recvbuf(), client->get_recvbuf() + ph->length, size);
+        client->set_recvlen(size);
+    }
+    
     return 0;    
 }
 
-
+void 
+m_group_node::send_s2c_heart(SOCKET sockfd)
+{
+    s2c_heart h;
+    send(sockfd, (const char*)&h, sizeof(h), 0);
+}
 
 
 
