@@ -240,6 +240,10 @@ m_login_node::recvdata(SOCKET sockfd)
                 });
                 //操作
                 _clients[sockfd]->login(ret.first, ret.second);
+                //消息前移
+                int size = client->get_recvlen() - ph->length;//未处理size
+                memcpy(client->get_recvbuf(), client->get_recvbuf() + ph->length, size);
+                client->set_recvlen(size);
                 return ret.second;
             }
         }
