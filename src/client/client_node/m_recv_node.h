@@ -58,6 +58,13 @@ private:
     
     //recv_buf
     char* _recv_buf;
+
+    //二级缓冲/尾部下标
+    char* _recv_buf_2;
+    int _recv_len_2;
+
+    //心跳计时
+    double _mytimer;
 };
 
 #endif

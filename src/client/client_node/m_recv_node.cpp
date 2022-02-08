@@ -10,10 +10,14 @@
 
 m_recv_node::m_recv_node(m_client* client):
     _client(client),
-    _sockfd(INVALID_SOCKET)
+    _sockfd(INVALID_SOCKET),
+    _recv_len_2(0),
+    _mytimer(0.0)
 {
     //recv_buf初始化
     _recv_buf = new char[RECV_BUF_SIZE];
+    //二级缓冲
+    _recv_buf_2 = new char[RECV_BUF_SIZE * 5];
 }
 
 m_recv_node::~m_recv_node()
@@ -21,6 +25,7 @@ m_recv_node::~m_recv_node()
     DEBUG("recv_node ~ start");
     close_node();
     delete[] _recv_buf;
+    delete[] _recv_buf_2;
     DEBUG("recv_node ~ end");
 }
 
@@ -72,6 +77,10 @@ m_recv_node::func_run(m_thread* thread)
         return;
     }
 
+    //计时器->心跳计时
+    m_timer timer;
+    timer.update();
+
     //epoll
     int epollfd = epoll_create(1);//主线程epoll仅关注连接事件
     struct epoll_event ev;
@@ -82,7 +91,17 @@ m_recv_node::func_run(m_thread* thread)
     //开始工作
     while(_thread.is_run())
     {
-        //epoll监听新连接
+        //更新心跳
+        _mytimer += timer.get_sec();
+        timer.update();
+        if(_mytimer >= 5.0)//超时
+        {
+            DEBUG("recv_node thread exit");
+            _thread.exit();
+            _client->m_exit();
+        }
+        
+        //epoll监听
         struct epoll_event events;
         int event_count = epoll_wait(epollfd, &events, 1, 1);//阻塞 
         if(event_count < 0)
@@ -94,8 +113,11 @@ m_recv_node::func_run(m_thread* thread)
         {
             if(recvdata() == -1)
             {
-                ERROR("recvdata error");
+                DEBUG("recv_node thread exit");
+                _thread.exit();
+                _client->m_exit();
             }
+            _mytimer = 0.0;//心跳计时归零
         }
     }
 
@@ -119,27 +141,42 @@ m_recv_node::recvdata()
         return -1;
     }
 
-    //操作
-    header* ph = (header*)_recv_buf;
-    if(buf_len < sizeof(header) || buf_len < ph->length)//防止半包
-    {
-        //这个部分回来还得用客户端二级缓冲 否则会丢包 稍后处理
-        return 1;
-    }
-
-    //处理
-    if(ph->cmd == CMD_LOGIN_RESULT)
-    {
-        login_result* plr = (login_result*)ph;
-        //设置ret并唤醒
-        _client->set_login_ret(plr->result);
-        _client->m_login_wake(); 
-    }
-    else
-    {
-        WARN("login_node 收到非登录包");
-    }
+    //内容转至二级缓冲
+    memcpy(_recv_buf_2 + _recv_len_2, _recv_buf, buf_len);
+    _recv_len_2 += buf_len;
     
+    //处理
+    while(_recv_len_2 >= (int)sizeof(header))
+    {
+        //不完整包
+        header* ph = (header*)_recv_buf_2;
+        if(_recv_len_2 < ph->length)
+        {
+            return 0;
+        }
+        
+        //处理
+        if(ph->cmd == CMD_LOGIN_RESULT)
+        {
+            login_result* plr = (login_result*)ph;
+            //设置ret并唤醒
+            _client->set_login_ret(plr->result);
+            _client->m_login_wake(); 
+        }
+        else if(ph->cmd == CMD_S2C_HEART)
+        {
+            //DEBUG("收到心跳包");
+        }
+        else
+        {
+            WARN("login_node 未知包");
+        } 
+        
+        //消息前移
+        int size = _recv_len_2 - ph->length;//未处理size
+        memcpy(_recv_buf_2, _recv_buf_2 + ph->length, size);
+        _recv_len_2 = size;
+    }
     
     return 0;
 }
