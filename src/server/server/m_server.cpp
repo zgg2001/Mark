@@ -21,6 +21,15 @@ m_server::m_server():
 m_server::~m_server()
 {
     m_close();
+
+    delete _lnodes;
+    //free组节点
+    for(auto& iter : _gnodes)
+    { 
+        delete iter.second;
+    }
+    
+    close(_sock);
 }
 
 int
@@ -129,13 +138,8 @@ m_server::m_accept()
 void
 m_server::m_close()
 {
-    delete _lnodes;
-    //free组节点
-    for(auto& iter : _gnodes)
-    { 
-        delete iter.second;
-    }
-    close(_sock);
+    DEBUG("Server m_close start");
+    _lnodes->close_node();
 }
 
 void
@@ -230,6 +234,16 @@ m_server::login(const char* name, const char* passwd)
     return _db->login(n, p);
 }
 
-
+void 
+m_server::node_login(int gid, m_client_node* node)
+{
+    if(_gnodes.count(gid) == 0)
+    {
+        ERROR("node_login error -- group node(%d) does not exist", gid);
+        return;
+    }
+    DEBUG("node_login success");
+    _gnodes[gid]->addclient(node);
+}
 
 

@@ -96,6 +96,11 @@ public:
     */
     std::pair<int, int> login(const char* name, const char* passwd);
 
+    /*
+    * 客户端节点登录
+    */
+    void node_login(int gid, m_client_node* node);
+
 private:
     //服务器socket
     SOCKET _sock;
@@ -107,7 +112,7 @@ private:
     m_login_node* _lnodes;
 
     //组节点
-    std::unordered_map<SOCKET, m_group_node*> _gnodes;
+    std::unordered_map<int, m_group_node*> _gnodes;
 };
 
 #endif
