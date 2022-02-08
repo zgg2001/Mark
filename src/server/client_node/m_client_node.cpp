@@ -16,15 +16,16 @@ m_client_node::m_client_node(SOCKET sockfd):
     _len_recv_buf(0),
     _hb_time(0)
 {
-
+    //缓冲
+    _msg_recv_buf = new char[CLIENT_RECV_BUF_SIZE];
+    _len_recv_buf = 0;
 }
 
 m_client_node::~m_client_node()
 {
     INFO("client_node socket(%d) uid(%d) gid(%d) quit",
          _sockfd, _user_id, _group_id);
-    if(_msg_recv_buf != nullptr)
-        delete[] _msg_recv_buf;
+    delete[] _msg_recv_buf;
     close(_sockfd);
 }
 
@@ -35,11 +36,9 @@ m_client_node::login(int uid, int gid)
     if(_status == client_status::logined)
         return false;
 
-    //初始化id与缓冲区
+    //初始化id
     _user_id = uid;
     _group_id = gid;
-    _msg_recv_buf = new char[CLIENT_RECV_BUF_SIZE];
-    _len_recv_buf = 0;
     _status = client_status::logined;
     
     INFO("client_node socket(%d) uid(%d) gid(%d) login", 
