@@ -141,7 +141,10 @@ m_client::m_exit()
 {
     if(_cl != nullptr)
         cmdline_quit(_cl);
-    //exit(1);
+    printf("\n-------------------------------------"
+           "\nNetwork error: disconnect from server"
+           "\n-------------------------------------\n");
+    exit(1);
 }
 
 bool 

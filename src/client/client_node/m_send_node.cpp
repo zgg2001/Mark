@@ -15,7 +15,9 @@ m_send_node::m_send_node(m_client* client):
 
 m_send_node::~m_send_node()
 {
+    DEBUG("send_node ~ start");
     close_node();
+    DEBUG("send_node ~ start");
 }
 
 void 
@@ -66,13 +68,13 @@ m_send_node::close_node()
 void 
 m_send_node::func_create(m_thread* thread)
 {
-    DEBUG("task_node func_create() start"); 
+    DEBUG("send_node func_create() start"); 
 }
 
 void 
 m_send_node::func_run(m_thread* thread)
 {
-    DEBUG("task_node func_run() start");
+    DEBUG("send_node func_run() start");
     
     //计时器->发心跳包
     m_timer timer;
@@ -81,10 +83,10 @@ m_send_node::func_run(m_thread* thread)
     
     while(_thread.is_run())
     {
-        //心跳包 5秒一发
+        //心跳包 两秒一发
         mytimer += timer.get_sec();
         timer.update();
-        if(mytimer >= 5.0)
+        if(mytimer >= 2.0)
         {
             c2s_heart h;
             send(_sockfd, (const char*)&h, sizeof(h), 0);
@@ -121,7 +123,7 @@ m_send_node::func_run(m_thread* thread)
 void 
 m_send_node::func_destory(m_thread* thread)
 {
-    DEBUG("task_node func_destory() start");
+    DEBUG("send_node func_destory() start");
 }
 
 void 
