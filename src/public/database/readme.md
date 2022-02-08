@@ -16,9 +16,12 @@ https://dev.mysql.com/doc/c-api/8.0/en/mysql-library-init.html</br>
 *  passwd: 登录密码
 * db_name: 数据库名
 *
-* 连接成功返回true
+* 返回值:
+*   -2 : 失败 -- MYSQL对象为空(mysql_init error)
+*   -1 : 失败 -- connect失败
+*    0 : 成功
 */
-bool connect(const char* host, const char* user, const char* passwd, const char* db_name);
+int connect(const char* host, const char* user, const char* passwd, const char* db_name);
 ```
 此函数进行数据库的连接操作。</br>
 ```
