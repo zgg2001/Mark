@@ -26,5 +26,7 @@ enum cmd
     CMD_S2C_HEART,      //心跳 server to client
     CMD_LOGIN,          //登录 
     CMD_LOGIN_RESULT,   //登录结果 
+    CMD_ADD_PLAN,       //新增计划
+    CMD_OPERATE_RESULT  //增/删/改结果
 };
 ```

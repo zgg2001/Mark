@@ -16,7 +16,9 @@ enum cmd
     CMD_C2S_HEART,      //心跳 client to server
     CMD_S2C_HEART,      //心跳 server to client
     CMD_LOGIN,          //登录 
-    CMD_LOGIN_RESULT,   //登录结果 
+    CMD_LOGIN_RESULT,   //登录结果
+    CMD_ADD_PLAN,       //新增计划
+    CMD_OPERATE_RESULT  //增/删/改结果
 };
 
 /*
@@ -77,6 +79,35 @@ struct login_result : public header
     {
         this->cmd = CMD_LOGIN_RESULT;
         this->length = sizeof(login_result);
+    }
+    int result;
+};
+
+/*
+* 新增计划
+*/
+struct add_plan : public header
+{
+    add_plan()
+    {
+        this->cmd = CMD_ADD_PLAN;
+        this->length = sizeof(add_plan);
+    }
+    int create_time;    //计划创建时间
+    int plan_time;      //计划完成时间
+    char content[102];  //内容
+    char remark[102];   //备注
+};
+
+/*
+* 增/删/改结果
+*/
+struct operate_result : public header
+{
+    operate_result()
+    {
+        this->cmd = CMD_OPERATE_RESULT;
+        this->length = sizeof(operate_result);
     }
     int result;
 };
