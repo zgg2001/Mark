@@ -9,6 +9,9 @@
 
 m_server::m_server():
     _sock(INVALID_SOCKET),
+    _pk_plan_id(-1),
+    _pk_user_id(-1),
+    _pk_group_id(-1),
     _lnodes(nullptr)
 {
     //数据库mgr
@@ -49,8 +52,15 @@ m_server::m_init()
     } 
 
     //数据库读取
-    _db->init("localhost", "root", "Zhj@7512");
-    
+    if(_db->init("localhost", "root", "Zhj@7512") < 0)
+    {
+        return -2;
+    }
+    _pk_plan_id = _db->get_pk_plan_id();
+    _pk_user_id = _db->get_pk_user_id();
+    _pk_group_id = _db->get_pk_group_id();
+    DEBUG("plan_pk:%d user_pk:%d group_pk:%d", _pk_plan_id, _pk_user_id, _pk_group_id);
+
     INFO("Server init(%d) success", _sock);
     return 0;
 }
@@ -180,24 +190,37 @@ m_server::m_work()
     {
         //epoll监听新连接
         struct epoll_event events;
-        int event_count = epoll_wait(epollfd, &events, 1, -1);//阻塞 
+        int event_count = epoll_wait(epollfd, &events, 1, 1); 
         if(event_count < 0)
         {
             ERROR("Server epoll_wait() error -- %s", strerror(errno));
             break;
         }
-        if(event_count == 0)
-        {
-            //DEBUG("Server epoll_wait() timeout"); 
-            continue;
-        }
-        else//处理新连接
+        else if(event_count > 0)//处理新连接
         {
             m_accept();
         }
         
+        //数据库更新task缓冲区 
+        if(!_tasksbuf.empty()) 
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            for(auto& t : _tasksbuf)
+            {
+                _tasks.push_back(t);
+            }
+            _tasksbuf.clear();
+        }
+        
         //处理数据库更新任务
-        //
+        if(_tasks.empty())
+            continue;
+        for(auto& t : _tasks)
+        {
+            t();
+            DEBUG("while(1) add_plan end");
+        }
+        _tasks.clear();
     }
     
     close(epollfd);
@@ -245,5 +268,32 @@ m_server::node_login(int gid, m_client_node* node)
     DEBUG("node_login success");
     _gnodes[gid]->addclient(node);
 }
+
+int 
+m_server::add_plan(int g_id, int p_id, int user_id,
+                   int create_t, int plan_t,
+                   const char* content_str, const char* remark_str)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char* c_str = new char[102];
+    char* r_str = new char[102];
+    int id = _pk_plan_id;
+
+    snprintf(c_str, 102, "%s", content_str);
+    snprintf(r_str, 102, "%s", remark_str);
+
+    _tasksbuf.push_back([=](){
+        _db->add_plan(g_id, p_id, user_id,
+                      id, create_t, plan_t,
+                      c_str, r_str);
+        delete[] c_str;
+        delete[] r_str;
+        DEBUG("taskbuf add_plan end");
+    });
+    DEBUG("m_server add_plan end");
+    return _pk_plan_id++;
+}
+
+
 
 

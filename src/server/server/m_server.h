@@ -27,6 +27,7 @@ class m_server
 {
 public:
     using SOCKET = int;
+    using task = std::function<void()>;
     static constexpr SOCKET INVALID_SOCKET = (SOCKET)(~0);
     static constexpr int SOCKET_ERROR = -1;
 
@@ -101,18 +102,36 @@ public:
     */
     void node_login(int gid, m_client_node* node);
 
+    /*
+    * 添加新计划
+    * 返回计划主键
+    */
+    int add_plan(int g_id, int p_id, int user_id, //组id, 组内id, 创建者id,
+                 int create_t, int plan_t, //创建时间, 计划时间
+                 const char* content_str, const char* remark_str); //内容, 备注
+
 private:
     //服务器socket
     SOCKET _sock;
 
     //数据库管理者
     m_db_mgr* _db;
+    int _pk_plan_id;//plan下一个主键id
+    int _pk_user_id;//user下一个主键id
+    int _pk_group_id;//group下一个主键id
 
     //登录节点
     m_login_node* _lnodes;
 
     //组节点
     std::unordered_map<int, m_group_node*> _gnodes;
+
+    //task缓冲区相关
+    std::list<task> _tasks;
+    std::list<task> _tasksbuf;
+
+    //lock
+    std::mutex _mutex;
 };
 
 #endif
