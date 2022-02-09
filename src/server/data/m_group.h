@@ -94,6 +94,8 @@ public:
     */
     bool deluser(int u_id);
 
+    int get_plan_max_id() const { return plan_max_id; }
+
 private:
     int _add_plan(int p_id, int u_id, int status,
                   int plan_id, int user_id,

@@ -5,6 +5,7 @@
 	> Created Time: Thu 27 Jan 2022 07:49:01 PM CST
  ************************************************************************/
 
+#include<server/server/m_server.h>
 #include"m_group_node.h"
 
 m_group_node::m_group_node(int g_id, const char* g_name, int a_id, m_server* server):
@@ -272,15 +273,40 @@ m_group_node::recvdata(SOCKET sockfd)
         }
         
         //处理
-        if(ph->cmd == CMD_C2S_HEART)
+        if(ph->cmd == CMD_C2S_HEART)//心跳包
         {
             //send s2c_heart
             _tnode.addtask([this, sockfd]()
             {
                 this->send_s2c_heart(sockfd);
             });
+            
             //心跳重置
             client->reset_hb();
+        }
+        else if(ph->cmd == CMD_ADD_PLAN)//新增计划
+        {
+            add_plan* ap = (add_plan*)ph;
+            int plan_id = _group->get_plan_max_id() + 1;
+            int user_id = client->get_uid();
+            
+            //数据库: add plan task
+            int pk_id = _server->add_plan(_group_id, plan_id, user_id,
+                                          ap->create_time, ap->plan_time,
+                                          ap->content, ap->remark); 
+            
+            //group_node: add plan
+            _group->addplan(plan_id, user_id, 0,
+                            pk_id, user_id,
+                            ap->create_time, ap->plan_time,
+                            ap->content, ap->remark); 
+            
+            //add result ret
+            _tnode.addtask([this, sockfd]()
+            {
+                this->send_operate_result(sockfd, 0);
+            });
+            DEBUG("group_node add_plan end");
         }
         else
         {
@@ -304,6 +330,12 @@ m_group_node::send_s2c_heart(SOCKET sockfd)
     send(sockfd, (const char*)&h, sizeof(h), 0);
 }
 
-
+void
+m_group_node::send_operate_result(SOCKET sockfd, int ret)
+{
+    operate_result oret;
+    oret.result = ret;
+    send(sockfd, (const char*)&oret, sizeof(oret), 0);
+}
 
 
