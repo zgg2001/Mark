@@ -160,8 +160,13 @@ m_recv_node::recvdata()
         {
             login_result* plr = (login_result*)ph;
             //设置ret并唤醒
-            _client->set_login_ret(plr->result);
-            _client->m_login_wake(); 
+            _client->m_login_wake(plr->result); 
+        }
+        else if(ph->cmd == CMD_OPERATE_RESULT)
+        {
+            operate_result* oret = (operate_result*)ph;
+            //设置ret并唤醒
+            _client->m_operate_wake(oret->result);
         }
         else if(ph->cmd == CMD_S2C_HEART)
         {

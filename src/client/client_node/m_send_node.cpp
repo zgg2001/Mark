@@ -36,6 +36,23 @@ m_send_node::send_login_data(std::string& name, std::string& passwd)
 }
 
 void
+m_send_node::send_add_plan_data(std::string& content, std::string& remark, int nowtime, int time)
+{
+    add_plan* ap = new add_plan();
+    ap->create_time = nowtime;
+    ap->plan_time = time;
+    snprintf(ap->content, 102, "%s", content.c_str());
+    snprintf(ap->remark, 102, "%s", remark.c_str());
+
+    //addtask
+    this->addtask([this, ap]()
+    {
+        send(_sockfd, (const char*)ap, sizeof(*ap), 0); 
+        delete ap;
+    }); 
+}
+
+void
 m_send_node::start()
 {
     DEBUG("send_node thread start");

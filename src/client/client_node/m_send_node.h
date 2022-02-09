@@ -38,6 +38,11 @@ public:
     * 发送登陆包
     */
     void send_login_data(std::string& name, std::string& passwd);
+
+    /*
+    * 新增计划报文
+    */
+    void send_add_plan_data(std::string& content, std::string& remark, int nowtime, int time);
     
     /*
     * 启动与关闭登录节点
