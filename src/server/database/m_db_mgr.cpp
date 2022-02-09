@@ -9,7 +9,8 @@
 #include"../server/m_server.h"
 
 m_db_mgr::m_db_mgr(m_server* server):
-    _server(server)
+    _server(server),
+    _status(false)
 {
 
 }
@@ -130,6 +131,8 @@ m_db_mgr::init(const char* host, const char* user,
         return -3;
     }
 
+    _status = true;
+
     //若初始化返回1 否则返回0
     return num == 0 ? 1 : 0;
 }
@@ -149,6 +152,81 @@ m_db_mgr::login(std::string& name, std::string& passwd)
     }
     return ret;
 }
+
+int 
+m_db_mgr::get_pk_plan_id()
+{
+    if(_status == false)
+        return -1;
+    
+    //储存sql命令执行结果
+    std::vector<char**>res;
+    int row;
+    int field;
+    
+    //获取mark_plan的下一个主键
+    _db.exec("select AUTO_INCREMENT from INFORMATION_SCHEMA.TABLES  where TABLE_NAME='mark_plan';", 
+             &res, &row, &field);
+
+    return atoi(res[0][0]);
+}
+    
+int 
+m_db_mgr::get_pk_user_id()
+{
+    if(_status == false)
+        return -1;
+    
+    //储存sql命令执行结果
+    std::vector<char**>res;
+    int row;
+    int field;
+    
+    //获取mark_user的下一个主键
+    _db.exec("select AUTO_INCREMENT from INFORMATION_SCHEMA.TABLES  where TABLE_NAME='mark_user';", 
+             &res, &row, &field);
+
+    return atoi(res[0][0]);
+}
+
+int 
+m_db_mgr::get_pk_group_id()
+{
+    if(_status == false)
+        return -1;
+    
+    //储存sql命令执行结果
+    std::vector<char**>res;
+    int row;
+    int field;
+    
+    //获取mark_group的下一个主键
+    _db.exec("select AUTO_INCREMENT from INFORMATION_SCHEMA.TABLES  where TABLE_NAME='mark_group';", 
+             &res, &row, &field);
+
+    return atoi(res[0][0]);
+}
+
+
+void 
+m_db_mgr::add_plan(int g_id, int p_id, int user_id,
+                   int id, int create_t, int plan_t,
+                   const char* content_str, const char* remark_str)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char sql[512] = { 0 };
+
+    snprintf(sql, 512, SQL_INSERT_PLAN, id, user_id, create_t, plan_t, content_str, remark_str);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+    
+    snprintf(sql, 512, SQL_INSERT_PLAN_INFO, id, user_id, g_id, p_id);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+   
+    _db.exec("analyze table mark_plan", nullptr, nullptr, nullptr);
+    DEBUG("m_db_mgr add_plan end");
+}
+
+
 
 
 

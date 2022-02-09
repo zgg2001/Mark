@@ -55,12 +55,27 @@ public:
     */
     std::pair<int, int> login(std::string& name, std::string& passwd);
 
+    /*
+    * 获取下一个主键id
+    */
+    int get_pk_plan_id();
+    int get_pk_user_id();
+    int get_pk_group_id();
+
+    /*
+    * 数据库新增计划
+    */
+    void add_plan(int g_id, int p_id, int user_id, //组id, 组内id, 创建者id,
+                  int id, int create_t, int plan_t, //id, 创建时间, 计划时间
+                  const char* content_str, const char* remark_str); //内容, 备注
+
 private:
     //所属server
     m_server* _server;
 
     //数据库连接
     m_db _db;
+    bool _status;
     
     //锁
     std::mutex _mutex;
@@ -180,6 +195,18 @@ private:
         mark_plan_info as i                                 \
     ON                                                      \
         p.id = i.id;";
+
+    //新增计划
+    static constexpr char SQL_INSERT_PLAN[] = "             \
+    INSERT INTO                                             \
+        mark_plan(id, create_user, status, create_time, plan_time, content, remark) \
+    VALUES                                                  \
+        (%d, %d, 0, %d, %d, '%s', '%s');";
+    static constexpr char SQL_INSERT_PLAN_INFO[] = "        \
+    INSERT INTO                                             \
+        mark_plan_info(id, user_id, group_id, plan_id)      \
+    VALUES                                                  \
+        (%d, %d, %d, %d);"; //所属者id, 所属组id, 组内id
 };
 
 #endif
