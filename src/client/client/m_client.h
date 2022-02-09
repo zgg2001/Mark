@@ -15,6 +15,7 @@
 #include<netinet/in.h>
 #include<arpa/inet.h>
 #include<memory>
+#include<ctime>
 
 #include<iostream>
 #include<string>
@@ -27,6 +28,7 @@
 #include<public/log/log.h>
 #include<public/security/m_md5.h>
 #include<public/security/m_noecho.h>
+#include<public/input/m_input.h>
 #include<client/client_node/m_recv_node.h>
 #include<client/client_node/m_send_node.h>
 
@@ -82,8 +84,13 @@ public:
     * 登录部分
     */
     bool m_login();
-    void m_login_wake();
-    void set_login_ret(int ret) { _login_ret = ret; }
+    void m_login_wake(int ret);
+
+    /*
+    * 增删改部分
+    */
+    void m_add_plan();
+    void m_operate_wake(int ret);
 
 private:
     m_client();
@@ -108,6 +115,7 @@ private:
     
     //报文结果
     int _login_ret;
+    int _operate_ret;
 
     //交互式命令行
     struct cmdline* _cl;

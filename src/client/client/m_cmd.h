@@ -32,9 +32,40 @@ parse_token_string_t cmd_exit_tok =
 parse_inst_t cmd_exit = {
     .f = cmd_exit_parsed,
     .data = NULL,
-    .help_str = "exit",
+    .help_str = "退出",
     .tokens = {
         reinterpret_cast<parse_token_hdr_t*>(&cmd_exit_tok),
+        NULL,
+    },
+};
+
+/*
+* 命令 新增plan
+*/
+struct cmd_add_plan_result
+{
+    fixed_string_t str1;
+    fixed_string_t str2;
+};
+
+static void
+cmd_add_plan_parsed(struct cmdline* cl, void* parsed_result, void* data)
+{
+    m_client::ins()->m_add_plan();
+}
+
+parse_token_string_t cmd_add_plan_tok1 =
+    TOKEN_STRING_INITIALIZER(struct cmd_add_plan_result, str1, "add");
+parse_token_string_t cmd_add_plan_tok2 =
+    TOKEN_STRING_INITIALIZER(struct cmd_add_plan_result, str2, "plan");
+
+parse_inst_t cmd_add_plan = {
+    .f = cmd_add_plan_parsed,
+    .data = NULL,
+    .help_str = "添加新计划",
+    .tokens = {
+        reinterpret_cast<parse_token_hdr_t*>(&cmd_add_plan_tok1),
+        reinterpret_cast<parse_token_hdr_t*>(&cmd_add_plan_tok2),
         NULL,
     },
 };
@@ -44,6 +75,7 @@ parse_inst_t cmd_exit = {
 */
 parse_ctx_t main_ctx[] = {
     reinterpret_cast<parse_inst_t*>(&cmd_exit),
+    reinterpret_cast<parse_inst_t*>(&cmd_add_plan),
     NULL,
 };
 

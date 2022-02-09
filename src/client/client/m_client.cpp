@@ -17,6 +17,7 @@ m_client::m_client():
     _sock(INVALID_SOCKET),
     _status(false),
     _login_ret(-1),
+    _operate_ret(-1),
     _cl(nullptr),
     _rnode(nullptr)
 {
@@ -183,11 +184,82 @@ m_client::m_login()
 }
 
 void 
-m_client::m_login_wake()
+m_client::m_login_wake(int ret)
 {
+    _login_ret = ret;
     _sem.wakeup();
 }
 
+void 
+m_client::m_add_plan()
+{
+    std::string content = {}, remark = {}, stime = {};
+    int nowtime, time = 0;
+    m_input i;
+
+    //当前时间
+    std::time_t t = std::time(nullptr);
+    std::tm *const pt = std::localtime(&t);
+    nowtime = (1900 + pt->tm_year) * 10000 + (1 + pt->tm_mon) * 100 + pt->tm_mday;
+    
+    //接收输入
+    i.input();
+    printf("计划内容\n> ");
+    getline(std::cin, content);
+    while(content.size() == 0)
+    {
+        printf("error - 内容不能为空\n> ");
+        getline(std::cin, content);
+    }
+    printf("计划备注\n> ");
+    getline(std::cin, remark);
+    printf("预计完成时间(>=%d)\n> ", nowtime);
+    while(1) 
+    {
+        try 
+        {
+            getline(std::cin, stime);
+            if(stime.size() != 0)
+                time = std::stoi(stime);
+            if(time < nowtime)
+            {
+                printf("WARN - 预计完成时间未设置\n");
+                time = 0;
+            }
+            break;
+        }
+        catch(std::exception& invalid_argument) 
+        {
+            printf("error - 输入有误\n> ");
+            continue;
+        }
+	}
+    i.recover();
+
+    //新增 send task
+    _snode->send_add_plan_data(content, remark, nowtime, time);
+    printf("add plan...");
+    fflush(stdin);
+
+    //阻塞等结果
+    _operate_ret = -1;
+    _sem.wait();
+    
+    //ret
+    if(_operate_ret == 0)
+    {
+        printf(" success\n");
+        return;
+    }
+    printf(" failed\n");
+}
+
+void
+m_client::m_operate_wake(int ret)
+{
+    _operate_ret = ret;
+    _sem.wakeup();
+}
 
 
 
