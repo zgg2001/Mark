@@ -90,6 +90,7 @@ public:
     * 增删改部分
     */
     void m_add_plan();
+    void m_del_plan(int id);
     void m_operate_wake(int ret);
 
 private:

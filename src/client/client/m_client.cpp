@@ -254,6 +254,39 @@ m_client::m_add_plan()
     printf(" failed\n");
 }
 
+void 
+m_client::m_del_plan(int id)
+{
+    std::string input;
+    m_input i;
+
+    i.input();
+    printf("确认删除id为%d的计划吗? (y/n): ", id);
+    getline(std::cin, input);
+    i.recover();
+    if(input == "y" || input == "yes" || input == "Y")
+    {
+        //新增send task
+        _snode->send_delete_plan_data(id);
+        printf("delete plan...");
+        fflush(stdin);
+        
+        //阻塞等结果
+        _operate_ret = -1;
+        _sem.wait();
+        
+        //ret
+        if(_operate_ret == 1)
+            printf(" success\n");
+        else if(_operate_ret == -1)
+            printf(" failed -- 计划不存在\n");
+        else if(_operate_ret == -2)
+            printf(" failed -- 权限不足\n");
+        else
+            printf(" failed -- 未知错误\n");
+    }
+}
+
 void
 m_client::m_operate_wake(int ret)
 {

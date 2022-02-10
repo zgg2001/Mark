@@ -71,11 +71,55 @@ parse_inst_t cmd_add_plan = {
 };
 
 /*
+* 命令 删除plan
+*/
+struct cmd_del_plan_result
+{
+    fixed_string_t str1;
+    fixed_string_t str2;
+    int num1;
+};
+
+static void
+cmd_del_plan_parsed(struct cmdline* cl, void* parsed_result, void* data)
+{
+    struct cmd_del_plan_result* result = (cmd_del_plan_result*)parsed_result;
+    int id = result->num1;
+
+    if(id <= 0)
+    {
+        printf("error - id应为正数\n");
+        return;
+    }
+    m_client::ins()->m_del_plan(id);
+}
+
+parse_token_string_t cmd_del_plan_tok1 =
+    TOKEN_STRING_INITIALIZER(struct cmd_del_plan_result, str1, "delete");
+parse_token_string_t cmd_del_plan_tok2 =
+    TOKEN_STRING_INITIALIZER(struct cmd_del_plan_result, str2, "plan");
+parse_token_num_t cmd_del_plan_tok3 =
+    TOKEN_NUM_INITIALIZER(struct cmd_del_plan_result, num1, INT32);
+
+parse_inst_t cmd_del_plan = {
+    .f = cmd_del_plan_parsed,
+    .data = NULL,
+    .help_str = "删除计划",
+    .tokens = {
+        reinterpret_cast<parse_token_hdr_t*>(&cmd_del_plan_tok1),
+        reinterpret_cast<parse_token_hdr_t*>(&cmd_del_plan_tok2),
+        reinterpret_cast<parse_token_hdr_t*>(&cmd_del_plan_tok3),
+        NULL,
+    },
+};
+
+/*
 * 命令组
 */
 parse_ctx_t main_ctx[] = {
     reinterpret_cast<parse_inst_t*>(&cmd_exit),
     reinterpret_cast<parse_inst_t*>(&cmd_add_plan),
+    reinterpret_cast<parse_inst_t*>(&cmd_del_plan),
     NULL,
 };
 

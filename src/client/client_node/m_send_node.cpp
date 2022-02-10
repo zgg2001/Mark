@@ -53,6 +53,19 @@ m_send_node::send_add_plan_data(std::string& content, std::string& remark, int n
 }
 
 void
+m_send_node::send_delete_plan_data(int id)
+{
+    del_plan* dp = new del_plan();
+    dp->plan_id = id;
+
+    //addtask
+    this->addtask([this, dp](){
+        send(_sockfd, (const char*)dp, sizeof(*dp), 0); 
+        delete dp;
+    });
+}
+
+void
 m_send_node::start()
 {
     DEBUG("send_node thread start");

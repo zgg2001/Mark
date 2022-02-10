@@ -45,6 +45,11 @@ public:
     void send_add_plan_data(std::string& content, std::string& remark, int nowtime, int time);
     
     /*
+    * 新增计划报文
+    */
+    void send_delete_plan_data(int id);
+    
+    /*
     * 启动与关闭登录节点
     */
     virtual void start() override;
