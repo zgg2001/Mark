@@ -18,6 +18,7 @@ enum cmd
     CMD_LOGIN,          //登录 
     CMD_LOGIN_RESULT,   //登录结果
     CMD_ADD_PLAN,       //新增计划
+    CMD_DEL_PLAN,       //删除计划
     CMD_OPERATE_RESULT  //增/删/改结果
 };
 
@@ -97,6 +98,19 @@ struct add_plan : public header
     int plan_time;      //计划完成时间
     char content[102];  //内容
     char remark[102];   //备注
+};
+
+/*
+* 删除计划
+*/
+struct del_plan : public header
+{
+    del_plan()
+    {
+        this->cmd = CMD_DEL_PLAN;
+        this->length = sizeof(del_plan);
+    }
+    int plan_id;
 };
 
 /*
