@@ -110,6 +110,12 @@ public:
                  int create_t, int plan_t, //创建时间, 计划时间
                  const char* content_str, const char* remark_str); //内容, 备注
 
+    /*
+    * 删除指定计划
+    * id: 计划主键id
+    */
+    void del_plan(int id);
+
 private:
     //服务器socket
     SOCKET _sock;

@@ -308,6 +308,28 @@ m_group_node::recvdata(SOCKET sockfd)
             });
             DEBUG("group_node add_plan end");
         }
+        else if(ph->cmd == CMD_DEL_PLAN)
+        {
+            del_plan* dp = (del_plan*)ph;
+            int plan_id = dp->plan_id;
+           
+            //获取主键id
+            int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id : -1; 
+            
+            //group_node: del plan
+            int ret = _group->delplan(client->get_uid(), plan_id);
+            
+            //数据库: del plan task
+            if(id > 0 && ret > 0)
+                _server->del_plan(id);
+            
+            //del result ret
+            _tnode.addtask([this, sockfd, ret]()
+            {
+                this->send_operate_result(sockfd, ret);
+            });
+            DEBUG("group_node del_plan end");
+        }
         else
         {
             ERROR("login_node 收到非法包");

@@ -69,6 +69,11 @@ public:
                   int id, int create_t, int plan_t, //id, 创建时间, 计划时间
                   const char* content_str, const char* remark_str); //内容, 备注
 
+    /*
+    * 数据库删除计划
+    */
+    void del_plan(int id);
+
 private:
     //所属server
     m_server* _server;
@@ -207,6 +212,18 @@ private:
         mark_plan_info(id, user_id, group_id, plan_id)      \
     VALUES                                                  \
         (%d, %d, %d, %d);"; //所属者id, 所属组id, 组内id
+
+    //删除计划
+    static constexpr char SQL_DELETE_PLAN[] = " \
+    DELETE FROM \
+        mark_plan \
+    WHERE \
+        id = %d;";
+    static constexpr char SQL_DELETE_PLAN_INFO[] = " \
+    DELETE FROM \
+        mark_plan_info \
+    WHERE \
+        id = %d;";
 };
 
 #endif

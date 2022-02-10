@@ -218,7 +218,6 @@ m_server::m_work()
         for(auto& t : _tasks)
         {
             t();
-            DEBUG("while(1) add_plan end");
         }
         _tasks.clear();
     }
@@ -294,6 +293,16 @@ m_server::add_plan(int g_id, int p_id, int user_id,
     return _pk_plan_id++;
 }
 
-
+void
+m_server::del_plan(int id)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    
+    _tasksbuf.push_back([this, id](){
+        _db->del_plan(id);
+        DEBUG("taskbuf del_plan end");
+    });
+    DEBUG("m_server del_plan end");
+}
 
 

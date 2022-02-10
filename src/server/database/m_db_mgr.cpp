@@ -207,7 +207,6 @@ m_db_mgr::get_pk_group_id()
     return atoi(res[0][0]);
 }
 
-
 void 
 m_db_mgr::add_plan(int g_id, int p_id, int user_id,
                    int id, int create_t, int plan_t,
@@ -226,7 +225,20 @@ m_db_mgr::add_plan(int g_id, int p_id, int user_id,
     DEBUG("m_db_mgr add_plan end");
 }
 
+void
+m_db_mgr::del_plan(int id)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char sql[128] = { 0 };
+    
+    snprintf(sql, 128, SQL_DELETE_PLAN, id);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+    
+    snprintf(sql, 128, SQL_DELETE_PLAN_INFO, id);
+    _db.exec(sql, nullptr, nullptr, nullptr);
 
+    DEBUG("m_db_mgr del_plan end");
+}
 
 
 
