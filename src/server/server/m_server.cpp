@@ -281,15 +281,16 @@ m_server::add_plan(int g_id, int p_id, int user_id,
     snprintf(c_str, 102, "%s", content_str);
     snprintf(r_str, 102, "%s", remark_str);
 
-    _tasksbuf.push_back([=](){
+    _tasksbuf.push_back([=]()
+    {
         _db->add_plan(g_id, p_id, user_id,
                       id, create_t, plan_t,
                       c_str, r_str);
         delete[] c_str;
         delete[] r_str;
-        DEBUG("taskbuf add_plan end");
+        //DEBUG("taskbuf add_plan end");
     });
-    DEBUG("m_server add_plan end");
+    //DEBUG("m_server add_plan end");
     return _pk_plan_id++;
 }
 
@@ -298,11 +299,61 @@ m_server::del_plan(int id)
 {
     std::lock_guard<std::mutex> lock(_mutex);
     
-    _tasksbuf.push_back([this, id](){
+    _tasksbuf.push_back([this, id]()
+    {
         _db->del_plan(id);
-        DEBUG("taskbuf del_plan end");
+        //DEBUG("taskbuf del_plan end");
     });
-    DEBUG("m_server del_plan end");
+    //DEBUG("m_server del_plan end");
 }
+
+void 
+m_server::upd_plan_t(int id, int time)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    
+    _tasksbuf.push_back([this, id, time]()
+    {
+        _db->upd_plan_t(id, time);
+        //DEBUG("taskbuf upd_plan_t end");
+    });
+    //DEBUG("m_server upd_plan_t end");
+}
+
+void 
+m_server::upd_plan_s(int id, int status)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    
+    _tasksbuf.push_back([this, id, status]()
+    {
+        _db->upd_plan_s(id, status);
+        //DEBUG("taskbuf upd_plan_s end");
+    });
+    //DEBUG("m_server upd_plan_s end");
+}
+
+void 
+m_server::upd_plan_c(int id, const char* content, const char* remark)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char* c_str = new char[102];
+    char* r_str = new char[102];
+
+    snprintf(c_str, 102, "%s", content);
+    snprintf(r_str, 102, "%s", remark);
+    
+    _tasksbuf.push_back([this, id, c_str, r_str]()
+    {
+        _db->upd_plan_c(id, c_str, r_str);
+        delete[] c_str;
+        delete[] r_str;
+        //DEBUG("taskbuf upd_plan_c end");
+    });
+    //DEBUG("m_server upd_plan_c end");
+}
+
+
+
 
 

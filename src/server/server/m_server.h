@@ -116,6 +116,14 @@ public:
     */
     void del_plan(int id);
 
+    /*
+    * 更新指定计划
+    * id: 计划主键id
+    */
+    void upd_plan_t(int id, int time);
+    void upd_plan_s(int id, int status);
+    void upd_plan_c(int id, const char* content, const char* remark);
+
 private:
     //服务器socket
     SOCKET _sock;

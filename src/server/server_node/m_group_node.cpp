@@ -293,32 +293,28 @@ m_group_node::recvdata(SOCKET sockfd)
             //数据库: add plan task
             int pk_id = _server->add_plan(_group_id, plan_id, user_id,
                                           ap->create_time, ap->plan_time,
-                                          ap->content, ap->remark); 
-            
+                                          ap->content, ap->remark);
             //group_node: add plan
             _group->addplan(plan_id, user_id, 0,
                             pk_id, user_id,
                             ap->create_time, ap->plan_time,
-                            ap->content, ap->remark); 
+                            ap->content, ap->remark);
             
             //add result ret
             _tnode.addtask([this, sockfd]()
             {
                 this->send_operate_result(sockfd, 0);
             });
-            DEBUG("group_node add_plan end");
         }
-        else if(ph->cmd == CMD_DEL_PLAN)
+        else if(ph->cmd == CMD_DEL_PLAN)//删除计划
         {
             del_plan* dp = (del_plan*)ph;
             int plan_id = dp->plan_id;
            
             //获取主键id
             int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id : -1; 
-            
             //group_node: del plan
             int ret = _group->delplan(client->get_uid(), plan_id);
-            
             //数据库: del plan task
             if(id > 0 && ret > 0)
                 _server->del_plan(id);
@@ -328,7 +324,63 @@ m_group_node::recvdata(SOCKET sockfd)
             {
                 this->send_operate_result(sockfd, ret);
             });
-            DEBUG("group_node del_plan end");
+        }
+        else if(ph->cmd == CMD_UPD_PLAN_T)//更新计划 - time
+        {
+            upd_plan_t* upt = (upd_plan_t*)ph;
+            int plan_id = upt->plan_id;
+            
+            //获取主键id
+            int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id : -1; 
+            //group_node: upd plan
+            int ret = _group->updplan_t(client->get_uid(), plan_id, upt->plan_time);
+            //数据库: del plan task
+            if(id > 0 && ret > 0)
+                _server->upd_plan_t(id, upt->plan_time);
+            
+            //upd result ret
+            _tnode.addtask([this, sockfd, ret]()
+            {
+                this->send_operate_result(sockfd, ret);
+            });
+        }
+        else if(ph->cmd == CMD_UPD_PLAN_S)//更新计划 - status
+        {
+            upd_plan_s* ups = (upd_plan_s*)ph;
+            int plan_id = ups->plan_id;
+            
+            //获取主键id
+            int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id : -1; 
+            //group_node: upd plan
+            int ret = _group->updplan_s(client->get_uid(), plan_id, ups->status);
+            //数据库: del plan task
+            if(id > 0 && ret > 0)
+                _server->upd_plan_s(id, ups->status);
+            
+            //upd result ret
+            _tnode.addtask([this, sockfd, ret]()
+            {
+                this->send_operate_result(sockfd, ret);
+            });
+        }
+        else if(ph->cmd == CMD_UPD_PLAN_C)//更新计划 - content
+        {
+            upd_plan_c* upc = (upd_plan_c*)ph;
+            int plan_id = upc->plan_id;
+            
+            //获取主键id
+            int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id : -1; 
+            //group_node: upd plan
+            int ret = _group->updplan_c(client->get_uid(), plan_id, upc->content, upc->remark);
+            //数据库: del plan task
+            if(id > 0 && ret > 0)
+                _server->upd_plan_c(id, upc->content, upc->remark);
+            
+            //upd result ret
+            _tnode.addtask([this, sockfd, ret]()
+            {
+                this->send_operate_result(sockfd, ret);
+            });
         }
         else
         {

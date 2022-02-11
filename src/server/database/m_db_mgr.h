@@ -74,6 +74,13 @@ public:
     */
     void del_plan(int id);
 
+    /*
+    * 数据库更新计划
+    */
+    void upd_plan_t(int id, int time);
+    void upd_plan_s(int id, int status);
+    void upd_plan_c(int id, const char* content, const char* remark);
+
 private:
     //所属server
     m_server* _server;
@@ -222,6 +229,23 @@ private:
     static constexpr char SQL_DELETE_PLAN_INFO[] = " \
     DELETE FROM \
         mark_plan_info \
+    WHERE \
+        id = %d;";
+
+    //更改计划
+    static constexpr char SQL_UPDATE_PLAN_TIME[] = " \
+    UPDATE \
+        mark_plan set plan_time = %d \
+    WHERE \
+        id = %d;";
+    static constexpr char SQL_UPDATE_PLAN_STATUS[] = " \
+    UPDATE \
+        mark_plan set status = %d \
+    WHERE \
+        id = %d;";
+    static constexpr char SQL_UPDATE_PLAN_CONTENT[] = " \
+    UPDATE \
+        mark_plan set content = '%s', remark = '%s' \
     WHERE \
         id = %d;";
 };

@@ -222,7 +222,7 @@ m_db_mgr::add_plan(int g_id, int p_id, int user_id,
     _db.exec(sql, nullptr, nullptr, nullptr);
    
     _db.exec("analyze table mark_plan", nullptr, nullptr, nullptr);
-    DEBUG("m_db_mgr add_plan end");
+    //DEBUG("m_db_mgr add_plan end");
 }
 
 void
@@ -237,7 +237,43 @@ m_db_mgr::del_plan(int id)
     snprintf(sql, 128, SQL_DELETE_PLAN_INFO, id);
     _db.exec(sql, nullptr, nullptr, nullptr);
 
-    DEBUG("m_db_mgr del_plan end");
+    //DEBUG("m_db_mgr del_plan end");
+}
+
+void 
+m_db_mgr::upd_plan_t(int id, int time)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char sql[128] = { 0 };
+    
+    snprintf(sql, 128, SQL_UPDATE_PLAN_TIME, time, id);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+    
+    //DEBUG("m_db_mgr upd_plan_t end");
+}
+
+void 
+m_db_mgr::upd_plan_s(int id, int status)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char sql[128] = { 0 };
+    
+    snprintf(sql, 128, SQL_UPDATE_PLAN_STATUS, status, id);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+    
+    //DEBUG("m_db_mgr upd_plan_s end");
+}
+
+void 
+m_db_mgr::upd_plan_c(int id, const char* content, const char* remark)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char sql[512] = { 0 };
+    
+    snprintf(sql, 512, SQL_UPDATE_PLAN_CONTENT, content, remark, id);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+    
+    //DEBUG("m_db_mgr upd_plan_c end");
 }
 
 
