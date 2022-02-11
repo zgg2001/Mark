@@ -28,6 +28,9 @@ enum cmd
     CMD_LOGIN_RESULT,   //登录结果 
     CMD_ADD_PLAN,       //新增计划
     CMD_DEL_PLAN,       //删除计划
+    CMD_UPD_PLAN_T,     //改动计划 - time
+    CMD_UPD_PLAN_S,     //改动计划 - status
+    CMD_UPD_PLAN_C,     //改动计划 - content
     CMD_OPERATE_RESULT  //增/删/改结果
 };
 ```

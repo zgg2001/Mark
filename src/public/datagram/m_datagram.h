@@ -19,6 +19,9 @@ enum cmd
     CMD_LOGIN_RESULT,   //登录结果
     CMD_ADD_PLAN,       //新增计划
     CMD_DEL_PLAN,       //删除计划
+    CMD_UPD_PLAN_T,     //改动计划 - time
+    CMD_UPD_PLAN_S,     //改动计划 - status
+    CMD_UPD_PLAN_C,     //改动计划 - content
     CMD_OPERATE_RESULT  //增/删/改结果
 };
 
@@ -124,6 +127,49 @@ struct operate_result : public header
         this->length = sizeof(operate_result);
     }
     int result;
+};
+
+/*
+* 改动计划 - 计划时间
+*/
+struct upd_plan_t : public header
+{
+    upd_plan_t()
+    {
+        this->cmd = CMD_UPD_PLAN_T;
+        this->length = sizeof(upd_plan_t);
+    }
+    int plan_id;
+    int plan_time;
+};
+
+/*
+* 改动计划 - 计划状态
+*/
+struct upd_plan_s : public header
+{
+    upd_plan_s()
+    {
+        this->cmd = CMD_UPD_PLAN_S;
+        this->length = sizeof(upd_plan_s);
+    }
+    int plan_id;
+    int status;
+};
+
+/*
+* 改动计划 - 计划内容
+*/
+struct upd_plan_c : public header
+{
+    upd_plan_c()
+    {
+        this->cmd = CMD_UPD_PLAN_C;
+        this->length = sizeof(upd_plan_c);
+    }
+    int plan_id;
+    char content[102];  //内容
+    char remark[102];   //备注
 };
 
 #endif
