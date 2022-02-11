@@ -91,7 +91,14 @@ public:
     */
     void m_add_plan();
     void m_del_plan(int id);
+    void m_upd_plan(int mode, int id);
     void m_operate_wake(int ret);
+    
+private:
+    //upd_plan数据的接收实现
+    void _upd_plan_t(int& time);
+    void _upd_plan_s(int& status);
+    void _upd_plan_c(std::string& content, std::string& remark);
 
 private:
     m_client();

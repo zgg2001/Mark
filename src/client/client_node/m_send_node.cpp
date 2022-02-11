@@ -65,6 +65,52 @@ m_send_node::send_delete_plan_data(int id)
     });
 }
 
+void 
+m_send_node::send_update_time_data(int id, int time)
+{
+    upd_plan_t* upt = new upd_plan_t();
+    upt->plan_id = id;
+    upt->plan_time = time;
+
+    //addtask
+    this->addtask([this, upt]()
+    {
+        send(_sockfd, (const char*)upt, sizeof(*upt), 0); 
+        delete upt;
+    });  
+}
+
+void 
+m_send_node::send_update_status_data(int id, int status)
+{
+    upd_plan_s* ups = new upd_plan_s();
+    ups->plan_id = id;
+    ups->status = status;
+
+    //addtask
+    this->addtask([this, ups]()
+    {
+        send(_sockfd, (const char*)ups, sizeof(*ups), 0); 
+        delete ups;
+    });  
+}
+
+void 
+m_send_node::send_update_content_data(int id, std::string& content, std::string& remark)
+{
+    upd_plan_c* upc = new upd_plan_c();
+    upc->plan_id = id;
+    snprintf(upc->content, 102, "%s", content.c_str());
+    snprintf(upc->remark, 102, "%s", remark.c_str());
+
+    //addtask
+    this->addtask([this, upc]()
+    {
+        send(_sockfd, (const char*)upc, sizeof(*upc), 0); 
+        delete upc;
+    });  
+}
+
 void
 m_send_node::start()
 {

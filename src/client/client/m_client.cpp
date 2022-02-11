@@ -287,6 +287,119 @@ m_client::m_del_plan(int id)
     }
 }
 
+void 
+m_client::m_upd_plan(int mode, int id)
+{
+    std::string content = {}, remark = {};
+    int time = 0, status = 0;
+    m_input i;
+    
+    i.input();
+    if(mode == 0)//时间
+    {
+        _upd_plan_t(time);
+        _snode->send_update_time_data(id, time);
+    }
+    else if(mode == 1)//状态
+    {
+        _upd_plan_s(status);
+        _snode->send_update_status_data(id, status);
+    }
+    else//内容
+    {
+        _upd_plan_c(content, remark);
+        _snode->send_update_content_data(id, content, remark);
+    }
+    i.recover();
+
+    //阻塞等结果
+    printf("update plan...");
+    fflush(stdin);
+    _operate_ret = -1;
+    _sem.wait();
+    
+    //ret
+    if(_operate_ret == 1)
+        printf(" success\n");
+    else if(_operate_ret == -1)
+        printf(" failed -- 计划不存在\n");
+    else if(_operate_ret == -2)
+        printf(" failed -- 权限不足\n");
+    else
+        printf(" failed -- 未知错误\n");
+}
+
+void 
+m_client::_upd_plan_t(int& time)
+{
+    std::string stime = {};
+    std::time_t t = std::time(nullptr);
+    std::tm *const pt = std::localtime(&t);
+    int nowtime = (1900 + pt->tm_year) * 10000 + (1 + pt->tm_mon) * 100 + pt->tm_mday;
+    
+    printf("更新预计完成时间(>=%d)\n> ", nowtime);
+    while(1) 
+    {
+        try 
+        {
+            getline(std::cin, stime);
+            if(stime.size() != 0)
+                time = std::stoi(stime);
+            if(time < nowtime)
+            {
+                printf("INFO - 更新为不设置\n");
+                time = 0;
+            }
+            break;
+        }
+        catch(std::exception& invalid_argument) 
+        {
+            printf("error - 输入有误\n> ");                
+            continue;
+        }
+    } 
+}
+
+void 
+m_client::_upd_plan_s(int& status)
+{
+    std::string input = {};
+    printf("更新计划状态\n1-搁置 2-进行中 3-已完成\n> ");
+    while(1) 
+    {
+        try 
+        {
+            getline(std::cin, input);
+            status = std::stoi(input) - 1;
+            if(status < 0 || status > 2)
+            {
+                printf("error - 输入有误\n> ");
+                continue;
+            }
+            break;
+        }
+        catch(std::exception& invalid_argument) 
+        {
+            printf("error - 输入有误\n> ");
+            continue;
+        }
+    } 
+}
+
+void 
+m_client::_upd_plan_c(std::string& content, std::string& remark)
+{
+    printf("更新计划内容\n> ");
+    getline(std::cin, content);
+    while(content.size() == 0)
+    {
+        printf("error - 内容不能为空\n> ");
+        getline(std::cin, content);
+    }
+    printf("更新计划备注\n> ");
+    getline(std::cin, remark);    
+}
+
 void
 m_client::m_operate_wake(int ret)
 {

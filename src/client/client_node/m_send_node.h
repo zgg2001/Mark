@@ -48,6 +48,13 @@ public:
     * 新增计划报文
     */
     void send_delete_plan_data(int id);
+
+    /*
+    * 更新计划报文
+    */
+    void send_update_time_data(int id, int time);
+    void send_update_status_data(int id, int status);
+    void send_update_content_data(int id, std::string& content, std::string& remark);
     
     /*
     * 启动与关闭登录节点
