@@ -111,6 +111,20 @@ m_send_node::send_update_content_data(int id, std::string& content, std::string&
     });  
 }
 
+void 
+m_send_node::send_show_plan_data(int id)
+{
+    show_plan* sp = new show_plan();\
+    sp->plan_id = id;
+
+    //addtask
+    this->addtask([this, sp]()
+    {
+        send(_sockfd, (const char*)sp, sizeof(*sp), 0); 
+        delete sp;
+    });  
+}
+
 void
 m_send_node::send_show_plan_u_data(int mode)
 {

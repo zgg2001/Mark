@@ -183,6 +183,31 @@ m_recv_node::recvdata()
             }
             break;
             
+            //show结果
+            case CMD_SHOW_RESULT:
+            {
+                show_result* sret = (show_result*)ph;
+                char status_str[3][12] = {"shelve", "progressing", "completed"};
+                
+                if(sret->plan_id != -1)
+                {
+                    printf(">计划id: %d\n", sret->plan_id);
+                    printf(">计划状态: %s\n", status_str[sret->status]);
+                    printf(">创建者(uid): %s(%d)\n", sret->create_name, sret->create_id);
+                    printf(">拥有者(uid): %s(%d)\n", sret->username, sret->user_id);
+                    printf(">创建时间: %d\n", sret->create_time);
+                    printf(">计划时间: %d\n", sret->plan_time);
+                    printf(">计划内容: %s\n", sret->content);
+                    printf(">计划备注: %s\n", sret->remark);
+                }
+                else
+                {
+                    printf("error - 计划不存在\n");
+                }
+                _client->m_show_wake();
+            }
+            break;
+            
             //show结果(用户)
             case CMD_SHOW_RESULT_U:
             {

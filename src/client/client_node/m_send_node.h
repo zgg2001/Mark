@@ -59,6 +59,7 @@ public:
     /*
     * 展示计划报文
     */
+    void send_show_plan_data(int id);
     void send_show_plan_u_data(int mode);
     void send_show_plan_g_data(int mode);
     

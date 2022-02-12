@@ -432,6 +432,15 @@ m_client::m_operate_wake(int ret)
 }
 
 void 
+m_client::m_show_plan(int plan_id)
+{
+    _snode->send_show_plan_data(plan_id);
+    fflush(stdin);
+    _operate_ret = -1;
+    _sem.wait();
+}
+
+void 
 m_client::m_show_plan_u(int mode)
 {
     _snode->send_show_plan_u_data(mode);
