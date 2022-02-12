@@ -76,6 +76,11 @@ private:
     */
     void send_operate_result(SOCKET sockfd, int ret);
 
+    /*
+    * 发送show plan结果包
+    */
+    void send_show_result_u(SOCKET sockfd, int uid, int mode);
+
 private:
     //所属server
     m_server* _server;

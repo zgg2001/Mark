@@ -271,6 +271,7 @@ m_group_node::recvdata(SOCKET sockfd)
         {
             return 0;
         }
+        //DEBUG("new data: cmd:%d length:%d", ph->cmd, ph->length);
         
         //处理
         if(ph->cmd == CMD_C2S_HEART)//心跳包
@@ -382,9 +383,21 @@ m_group_node::recvdata(SOCKET sockfd)
                 this->send_operate_result(sockfd, ret);
             });
         }
+        else if(ph->cmd == CMD_SHOW_PLAN_USER)//展示计划 -- 个人
+        {
+            show_plan_u* spu = (show_plan_u*)ph;
+            int mode = spu->mode;
+            int uid = client->get_uid();
+            
+            //交给send_node迭代发包
+            _tnode.addtask([this, sockfd, uid, mode]()
+            {
+                this->send_show_result_u(sockfd, uid, mode);
+            });
+        }
         else
         {
-            ERROR("login_node 收到非法包");
+            ERROR("send_node 收到非法包");
             return -1;
         }
         
@@ -411,5 +424,50 @@ m_group_node::send_operate_result(SOCKET sockfd, int ret)
     oret.result = ret;
     send(sockfd, (const char*)&oret, sizeof(oret), 0);
 }
+
+void 
+m_group_node::send_show_result_u(SOCKET sockfd, int uid, int mode)
+{
+    //待发送的计划
+    std::vector<std::list<int>*> lplans;
+    
+    //获取需发送的计划集
+    if(mode == 3 || mode == 0)
+        lplans.push_back(&(_group->users[uid].plans[0]));
+    if(mode == 3 || mode == 1)
+        lplans.push_back(&(_group->users[uid].plans[1]));
+    if(mode == 3 || mode == 2)
+        lplans.push_back(&(_group->users[uid].plans[2]));
+    
+    int now = 0;
+    show_result_u sru;
+    sru.sn = 1;
+    sru.noap = now;
+
+    //work
+    for(auto& lnow : lplans)
+    {
+        for(auto iter = lnow->begin(); iter != lnow->end(); ++iter)
+        {
+            int plan_id = *iter;
+            if(now == 10)
+            {
+                send(sockfd, (const char*)&sru, sizeof(sru), 0);
+                now = 0;
+            }
+            m_plan& plan = _group->plans[plan_id];
+            sru.plans[now].plan_id = plan_id;
+            sru.plans[now].status = static_cast<int>(plan.status);
+            sru.plans[now].create_time = plan.create_time;
+            sru.plans[now].plan_time = plan.plan_time;
+            snprintf(sru.plans[now].content, 102, "%s", plan.content);
+            sru.noap = now++;
+        }
+    }
+    sru.sn = 0;
+    send(sockfd, (const char*)&sru, sizeof(sru), 0);
+}
+
+
 
 
