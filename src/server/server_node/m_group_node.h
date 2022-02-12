@@ -80,6 +80,7 @@ private:
     * 发送show plan结果包
     */
     void send_show_result_u(SOCKET sockfd, int uid, int mode);
+    void send_show_result_g(SOCKET sockfd, int mode);
 
 private:
     //所属server
