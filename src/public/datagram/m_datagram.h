@@ -23,6 +23,8 @@ enum cmd
     CMD_UPD_PLAN_S,     //改动计划 - status
     CMD_UPD_PLAN_C,     //改动计划 - content
     CMD_OPERATE_RESULT, //增/删/改结果
+    CMD_SHOW_PLAN,      //show指定计划
+    CMD_SHOW_RESULT,    //获取指定计划结果
     CMD_SHOW_PLAN_USER, //show个人计划
     CMD_SHOW_RESULT_U,  //获取个人计划结果
     CMD_SHOW_PLAN_GROUP,//show组计划
@@ -174,6 +176,41 @@ struct operate_result : public header
         this->length = sizeof(operate_result);
     }
     int result;
+};
+
+/*
+* 获取计划 -- 指定计划
+*/
+struct show_plan : public header
+{
+    show_plan()
+    {
+        this->cmd = CMD_SHOW_PLAN;
+        this->length = sizeof(show_plan);
+    }
+    int plan_id;
+};
+
+/*
+* 获取计划结果 -- 指定计划
+*/
+struct show_result : public header
+{
+    show_result()
+    {
+        this->cmd = CMD_SHOW_RESULT;
+        this->length = sizeof(show_result);
+    }
+    int plan_id;
+    int user_id;
+    char username[12];
+    int create_id;
+    char create_name[12];
+    int status;
+    int create_time;
+    int plan_time;
+    char content[102];
+    char remark[102];
 };
 
 /*
