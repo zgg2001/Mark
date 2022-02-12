@@ -403,6 +403,20 @@ m_group_node::recvdata(SOCKET sockfd)
             }
             break;
             
+            //展示计划
+            case CMD_SHOW_PLAN:
+            {
+                show_plan* sp = (show_plan*)ph;
+                int plan_id = sp->plan_id;
+                
+                //交给send_node发包
+                _tnode.addtask([this, sockfd, plan_id]()
+                {
+                    this->send_show_result(sockfd, plan_id);
+                });
+            }
+            break;
+            
             //展示计划 -- 个人
             case CMD_SHOW_PLAN_USER:
             {
@@ -460,6 +474,37 @@ m_group_node::send_operate_result(SOCKET sockfd, int ret)
     operate_result oret;
     oret.result = ret;
     send(sockfd, (const char*)&oret, sizeof(oret), 0);
+}
+
+void 
+m_group_node::send_show_result(SOCKET sockfd, int plan_id)
+{
+    show_result sr;
+    sr.plan_id = -1;
+    if(_group->plans.count(plan_id) != 0)
+    {
+        m_plan& plan = _group->plans[plan_id];
+        sr.plan_id = plan_id;
+        sr.create_id = plan.create_user;
+        snprintf(sr.username, 12, "%s", _group->users[sr.create_id].username.c_str());
+        sr.status = static_cast<int>(plan.status);
+        for(auto& [uid, u] : _group->users)
+        {
+            for(auto iter = u.plans[sr.status].begin(); iter != u.plans[sr.status].end(); ++iter)
+            {
+                if(*iter == plan_id)
+                {
+                    sr.user_id = uid;
+                    snprintf(sr.create_name, 12, "%s", _group->users[sr.user_id].username.c_str());
+                }
+            }
+        }
+        sr.create_time = plan.create_time;
+        sr.plan_time = plan.plan_time;
+        snprintf(sr.content, 102, "%s", plan.content);
+        snprintf(sr.remark, 102, "%s", plan.remark);
+    }
+    send(sockfd, (const char*)&sr, sizeof(sr), 0);
 }
 
 void 
