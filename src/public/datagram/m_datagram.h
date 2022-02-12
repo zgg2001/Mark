@@ -22,7 +22,11 @@ enum cmd
     CMD_UPD_PLAN_T,     //改动计划 - time
     CMD_UPD_PLAN_S,     //改动计划 - status
     CMD_UPD_PLAN_C,     //改动计划 - content
-    CMD_OPERATE_RESULT  //增/删/改结果
+    CMD_OPERATE_RESULT, //增/删/改结果
+    CMD_SHOW_PLAN_USER, //show个人计划
+    CMD_SHOW_RESULT_U,  //获取个人计划结果
+    CMD_SHOW_PLAN_GROUP,//show组计划
+    CMD_SHOW_RESULT_G   //获取组计划结果
 };
 
 /*
@@ -117,19 +121,6 @@ struct del_plan : public header
 };
 
 /*
-* 增/删/改结果
-*/
-struct operate_result : public header
-{
-    operate_result()
-    {
-        this->cmd = CMD_OPERATE_RESULT;
-        this->length = sizeof(operate_result);
-    }
-    int result;
-};
-
-/*
 * 改动计划 - 计划时间
 */
 struct upd_plan_t : public header
@@ -170,6 +161,93 @@ struct upd_plan_c : public header
     int plan_id;
     char content[102];  //内容
     char remark[102];   //备注
+};
+
+/*
+* 增/删/改结果
+*/
+struct operate_result : public header
+{
+    operate_result()
+    {
+        this->cmd = CMD_OPERATE_RESULT;
+        this->length = sizeof(operate_result);
+    }
+    int result;
+};
+
+/*
+* 获取计划 -- 个人计划
+*/
+struct show_plan_u : public header
+{
+    show_plan_u()
+    {
+        this->cmd = CMD_SHOW_PLAN_USER;
+        this->length = sizeof(show_plan_u);
+    }
+    int mode;
+};
+
+/*
+* 获取计划结果 -- 个人计划
+*/
+struct show_ret_u
+{
+    int plan_id;
+    int status;
+    int create_time;
+    int plan_time;
+    char content[102];
+};
+struct show_result_u : public header
+{
+    show_result_u()
+    {
+        this->cmd = CMD_SHOW_RESULT_U;
+        this->length = sizeof(show_result_u);
+    }
+    int sn;//状态数 为0时说明为尾包 客户端停止阻塞
+    int noap;//有效计划数 <=10
+    show_ret_u plans[10];
+};
+
+/*
+* 获取计划 -- 组计划
+*/
+struct show_plan_g : public header
+{
+    show_plan_g()
+    {
+        this->cmd = CMD_SHOW_PLAN_GROUP;
+        this->length = sizeof(show_plan_g);
+    }
+    int mode;
+};
+
+/*
+* 获取计划结果 -- 组计划
+*/
+struct show_ret_g
+{
+    int plan_id;
+    int user_id;
+    char username[12];
+    int status;
+    int create_time;
+    int plan_time;
+    char content[102];
+};
+struct show_result_g : public header
+{
+    show_result_g()
+    {
+        this->cmd = CMD_SHOW_RESULT_G;
+        this->length = sizeof(show_result_g);
+    }
+    int sn;//状态数 为0时说明为尾包 客户端停止阻塞
+    int noap;//有效计划数 <=10
+    show_ret_g plans[10];
 };
 
 #endif

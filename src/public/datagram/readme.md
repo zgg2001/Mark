@@ -31,6 +31,10 @@ enum cmd
     CMD_UPD_PLAN_T,     //改动计划 - time
     CMD_UPD_PLAN_S,     //改动计划 - status
     CMD_UPD_PLAN_C,     //改动计划 - content
-    CMD_OPERATE_RESULT  //增/删/改结果
+    CMD_OPERATE_RESULT, //增/删/改结果
+    CMD_SHOW_PLAN_USER, //show个人计划
+    CMD_SHOW_RESULT_U,  //获取个人计划结果
+    CMD_SHOW_PLAN_GROUP,//show组计划
+    CMD_SHOW_RESULT_G   //获取组计划结果
 };
 ```
