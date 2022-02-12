@@ -93,6 +93,12 @@ public:
     void m_del_plan(int id);
     void m_upd_plan(int mode, int id);
     void m_operate_wake(int ret);
+
+    /*
+    * 展示部分
+    */
+    void m_show_plan_u(int mode);
+    void m_show_wake();
     
 private:
     //upd_plan数据的接收实现

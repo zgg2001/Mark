@@ -156,21 +156,36 @@ m_recv_node::recvdata()
         }
         
         //处理
-        if(ph->cmd == CMD_LOGIN_RESULT)
+        if(ph->cmd == CMD_LOGIN_RESULT)//登录结果
         {
             login_result* plr = (login_result*)ph;
             //设置ret并唤醒
             _client->m_login_wake(plr->result); 
         }
-        else if(ph->cmd == CMD_OPERATE_RESULT)
+        else if(ph->cmd == CMD_OPERATE_RESULT)//增删改结果
         {
             operate_result* oret = (operate_result*)ph;
             //设置ret并唤醒
             _client->m_operate_wake(oret->result);
         }
-        else if(ph->cmd == CMD_S2C_HEART)
+        else if(ph->cmd == CMD_S2C_HEART)//心跳
         {
             //DEBUG("收到心跳包");
+        }
+        else if(ph->cmd == CMD_SHOW_RESULT_U)//show结果(用户)
+        {
+            show_result_u* sret = (show_result_u*)ph;
+            char status_str[3][12] = {"shelve", "progressing", "complete"};
+            
+            for(int i = 0; i <= sret->noap; ++i)
+            {
+                show_ret_u* ptr = &(sret->plans[i]); 
+                //id - 状态 - 创建时间 - 计划时间 - 内容
+                printf(" %05d | %12s | %8d | %8d | %s\n", ptr->plan_id, status_str[ptr->status], 
+                       ptr->create_time, ptr->plan_time, ptr->content);
+            }
+            if(sret->sn == 0)
+                _client->m_show_wake();
         }
         else
         {

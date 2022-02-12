@@ -112,6 +112,20 @@ m_send_node::send_update_content_data(int id, std::string& content, std::string&
 }
 
 void
+m_send_node::send_show_plan_u_data(int mode)
+{
+    show_plan_u* spu = new show_plan_u();
+    spu->mode = mode;
+
+    //addtask
+    this->addtask([this, spu]()
+    {
+        send(_sockfd, (const char*)spu, sizeof(*spu), 0); 
+        delete spu;
+    });  
+}
+
+void
 m_send_node::start()
 {
     DEBUG("send_node thread start");

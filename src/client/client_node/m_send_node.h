@@ -55,6 +55,11 @@ public:
     void send_update_time_data(int id, int time);
     void send_update_status_data(int id, int status);
     void send_update_content_data(int id, std::string& content, std::string& remark);
+
+    /*
+    * 展示计划报文
+    */
+    void send_show_plan_u_data(int mode);
     
     /*
     * 启动与关闭登录节点

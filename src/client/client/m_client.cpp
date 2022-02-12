@@ -407,5 +407,23 @@ m_client::m_operate_wake(int ret)
     _sem.wakeup();
 }
 
+void 
+m_client::m_show_plan_u(int mode)
+{
+    _snode->send_show_plan_u_data(mode);
+    
+    //阻塞等结果
+    printf("-------+--------------+----------+----------+----------------------\n");
+    printf("  id   |     状态     | 创建时间 | 计划时间 | 内容\n");
+    fflush(stdin);
+    _operate_ret = -1;
+    _sem.wait();
+    printf("-------+--------------+----------+----------+----------------------\n");
+}
 
+void 
+m_client::m_show_wake()
+{
+    _sem.wakeup();
+}
 
