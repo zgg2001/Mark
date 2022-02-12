@@ -156,42 +156,80 @@ m_recv_node::recvdata()
         }
         
         //处理
-        if(ph->cmd == CMD_LOGIN_RESULT)//登录结果
+        switch(ph->cmd)
         {
-            login_result* plr = (login_result*)ph;
-            //设置ret并唤醒
-            _client->m_login_wake(plr->result); 
-        }
-        else if(ph->cmd == CMD_OPERATE_RESULT)//增删改结果
-        {
-            operate_result* oret = (operate_result*)ph;
-            //设置ret并唤醒
-            _client->m_operate_wake(oret->result);
-        }
-        else if(ph->cmd == CMD_S2C_HEART)//心跳
-        {
-            //DEBUG("收到心跳包");
-        }
-        else if(ph->cmd == CMD_SHOW_RESULT_U)//show结果(用户)
-        {
-            show_result_u* sret = (show_result_u*)ph;
-            char status_str[3][12] = {"shelve", "progressing", "complete"};
-            
-            for(int i = 0; i <= sret->noap; ++i)
+            //登录结果
+            case CMD_LOGIN_RESULT:
             {
-                show_ret_u* ptr = &(sret->plans[i]); 
-                //id - 状态 - 创建时间 - 计划时间 - 内容
-                printf(" %05d | %12s | %8d | %8d | %s\n", ptr->plan_id, status_str[ptr->status], 
-                       ptr->create_time, ptr->plan_time, ptr->content);
+                login_result* plr = (login_result*)ph;
+                //设置ret并唤醒
+                _client->m_login_wake(plr->result); 
             }
-            if(sret->sn == 0)
-                _client->m_show_wake();
+            break;
+            
+            //增删改结果
+            case CMD_OPERATE_RESULT:
+            {
+                operate_result* oret = (operate_result*)ph;
+                //设置ret并唤醒
+                _client->m_operate_wake(oret->result);
+            }
+            break;
+            
+            //心跳
+            case CMD_S2C_HEART:
+            {
+                //DEBUG("收到心跳包");
+            }
+            break;
+            
+            //show结果(用户)
+            case CMD_SHOW_RESULT_U:
+            {
+                show_result_u* sret = (show_result_u*)ph;
+                char status_str[3][12] = {"  shelve   ", "progressing", " completed "};
+                
+                for(int i = 0; i <= sret->noap; ++i)
+                {
+                    show_ret_u* ptr = &(sret->plans[i]); 
+                    //id - 状态 - 创建时间 - 计划时间 - 内容
+                    printf(" %05d | %s | %8d | %8d | %s\n", ptr->plan_id, status_str[ptr->status], 
+                           ptr->create_time, ptr->plan_time, ptr->content);
+                }
+                if(sret->sn == 0)
+                    _client->m_show_wake();
+            }
+            break;
+            
+            //show结果(组)
+            case CMD_SHOW_RESULT_G:
+            {
+                show_result_g* sret = (show_result_g*)ph;
+                char status_str[3][12] = {"  shelve   ", "progressing", " completed "};
+                
+                for(int i = 0; i <= sret->noap; ++i)
+                {
+                    show_ret_g* ptr = &(sret->plans[i]); 
+                    int ss = 12 - strnlen(ptr->username, 12);
+                    std::string name = {};
+                    name.append(ss/2, ' ');
+                    name += ptr->username;
+                    name.append(ss - ss/2, ' ');
+                    //id - 所属用户 - 用户id - 状态 - 创建时间 - 计划时间 - 内容
+                    printf(" %05d | %s | %03d | %s | %8d | %d | %s\n", ptr->plan_id, 
+                           name.c_str(), ptr->user_id, status_str[ptr->status], 
+                           ptr->create_time, ptr->plan_time, ptr->content);
+                }
+                if(sret->sn == 0)
+                    _client->m_show_wake();
+            }
+            break;
+            
+            default:
+            {
+                WARN("login_node 未知包");
+            } 
         }
-        else
-        {
-            WARN("login_node 未知包");
-        } 
-        
         //消息前移
         int size = _recv_len_2 - ph->length;//未处理size
         memcpy(_recv_buf_2, _recv_buf_2 + ph->length, size);

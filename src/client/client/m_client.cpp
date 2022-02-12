@@ -206,13 +206,25 @@ m_client::m_add_plan()
     i.input();
     printf("计划内容\n> ");
     getline(std::cin, content);
-    while(content.size() == 0)
+    int length = content.size();
+    while(length == 0 || length > 100)
     {
-        printf("error - 内容不能为空\n> ");
+        if(length == 0)
+            printf("error - 内容不能为空\n> ");
+        else
+            printf("error - 输入过长(length <= 100byte)\n> ");
         getline(std::cin, content);
+        length = content.size();
     }
-    printf("计划备注\n> ");
-    getline(std::cin, remark);
+    printf("更新计划备注\n> ");
+    getline(std::cin, remark);    
+    length = remark.size();
+    while(length > 100)
+    {
+        printf("error - 输入过长(length <= 100byte)\n> ");
+        getline(std::cin, remark);
+        length = remark.size();
+    }
     printf("预计完成时间(>=%d)\n> ", nowtime);
     while(1) 
     {
@@ -391,13 +403,25 @@ m_client::_upd_plan_c(std::string& content, std::string& remark)
 {
     printf("更新计划内容\n> ");
     getline(std::cin, content);
-    while(content.size() == 0)
+    int length = content.size();
+    while(length == 0 || length > 100)
     {
-        printf("error - 内容不能为空\n> ");
+        if(length == 0)
+            printf("error - 内容不能为空\n> ");
+        else
+            printf("error - 输入过长(length <= 100byte)\n> ");
         getline(std::cin, content);
+        length = content.size();
     }
     printf("更新计划备注\n> ");
     getline(std::cin, remark);    
+    length = remark.size();
+    while(length > 100)
+    {
+        printf("error - 输入过长(length <= 100byte)\n> ");
+        getline(std::cin, remark);
+        length = remark.size();
+    }
 }
 
 void
@@ -413,12 +437,26 @@ m_client::m_show_plan_u(int mode)
     _snode->send_show_plan_u_data(mode);
     
     //阻塞等结果
-    printf("-------+--------------+----------+----------+----------------------\n");
-    printf("  id   |     状态     | 创建时间 | 计划时间 | 内容\n");
+    printf("-------+-------------+----------+----------+----------------------\n");
+    printf("  id   |    状态     | 创建时间 | 计划时间 | 内容\n");
     fflush(stdin);
     _operate_ret = -1;
     _sem.wait();
-    printf("-------+--------------+----------+----------+----------------------\n");
+    printf("-------+-------------+----------+----------+----------------------\n");
+}
+
+void 
+m_client::m_show_plan_g(int mode)
+{
+    _snode->send_show_plan_g_data(mode);
+    
+    //阻塞等结果
+    printf("-------+--------------+-----+-------------+----------+----------+----------------------\n");
+    printf("  id   |   所属用户   | uid |    状态     | 创建时间 | 计划时间 | 内容\n");
+    fflush(stdin);
+    _operate_ret = -1;
+    _sem.wait();
+    printf("-------+--------------+-----+-------------+----------+----------+----------------------\n");
 }
 
 void 

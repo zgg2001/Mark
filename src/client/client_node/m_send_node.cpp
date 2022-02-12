@@ -126,6 +126,20 @@ m_send_node::send_show_plan_u_data(int mode)
 }
 
 void
+m_send_node::send_show_plan_g_data(int mode)
+{
+    show_plan_g* spg = new show_plan_g();
+    spg->mode = mode;
+
+    //addtask
+    this->addtask([this, spg]()
+    {
+        send(_sockfd, (const char*)spg, sizeof(*spg), 0); 
+        delete spg;
+    });  
+}
+
+void
 m_send_node::start()
 {
     DEBUG("send_node thread start");

@@ -98,6 +98,7 @@ public:
     * 展示部分
     */
     void m_show_plan_u(int mode);
+    void m_show_plan_g(int mode);
     void m_show_wake();
     
 private:
