@@ -119,9 +119,13 @@ m_client::m_work()
         return;
     }
     printf("login... success\n");
+    printf("\nWelcome to Mark, %s!\n\n", _username.c_str());
 
     //新建命令行
-    _cl = cmdline_get_new(main_ctx, "Mark> "); 
+    if(_username == "root")
+        _cl = cmdline_get_new(main_ctx_root, "Mark> "); 
+    else
+        _cl = cmdline_get_new(main_ctx, "Mark> "); 
     //开始交互工作
     cmdline_start_interact(_cl);
     //退出
@@ -176,6 +180,7 @@ m_client::m_login()
         //ret
         if(_login_ret == 0)
         {
+            _username = name;
             return true;
         }
         printf("Access denied\n");
@@ -205,20 +210,10 @@ m_client::m_add_plan()
     //接收输入
     i.input();
     printf("计划内容\n> ");
-    getline(std::cin, content);
-    int length = content.size();
-    while(length == 0 || length > 100)
-    {
-        if(length == 0)
-            printf("error - 内容不能为空\n> ");
-        else
-            printf("error - 输入过长(length <= 100byte)\n> ");
-        getline(std::cin, content);
-        length = content.size();
-    }
+    _get_string(content, 100);
     printf("更新计划备注\n> ");
     getline(std::cin, remark);    
-    length = remark.size();
+    int length = remark.size();
     while(length > 100)
     {
         printf("error - 输入过长(length <= 100byte)\n> ");
@@ -402,20 +397,10 @@ void
 m_client::_upd_plan_c(std::string& content, std::string& remark)
 {
     printf("更新计划内容\n> ");
-    getline(std::cin, content);
-    int length = content.size();
-    while(length == 0 || length > 100)
-    {
-        if(length == 0)
-            printf("error - 内容不能为空\n> ");
-        else
-            printf("error - 输入过长(length <= 100byte)\n> ");
-        getline(std::cin, content);
-        length = content.size();
-    }
+    _get_string(content, 100);
     printf("更新计划备注\n> ");
     getline(std::cin, remark);    
-    length = remark.size();
+    int length = remark.size();
     while(length > 100)
     {
         printf("error - 输入过长(length <= 100byte)\n> ");
@@ -429,6 +414,123 @@ m_client::m_operate_wake(int ret)
 {
     _operate_ret = ret;
     _sem.wakeup();
+}
+
+void 
+m_client::m_add_group()
+{
+    std::string group_name, admin_name, admin_password, temp_passwd, admin_mail;
+    m_input i;
+    m_noecho noec;
+
+    i.input();
+    printf(">group name: ");
+    _get_string(group_name, 10);
+    printf(">admin name: ");
+    _get_string(admin_name, 10);
+    while(1)
+    {
+        noec.noecho();
+        printf(">%s's password: ", admin_name.c_str());
+        _get_string(admin_password, 30); 
+        admin_password = m_md5::md5sum(admin_password);
+        printf("\n>retype password: ");
+        _get_string(temp_passwd, 30);
+        temp_passwd = m_md5::md5sum(temp_passwd);
+        noec.recover();
+        if(temp_passwd == admin_password)
+            break;
+        printf("\nerror - password are different\n");
+    }
+    printf("\n>%s's email: ", admin_name.c_str());
+    _get_string(admin_mail, 30);
+    i.recover();
+    _snode->send_add_group_data(group_name, admin_name, admin_password, admin_mail);
+
+    //阻塞等结果
+    printf("add group...");
+    fflush(stdin);
+    _operate_ret = -1;
+    _sem.wait();
+    
+    //return        
+    if(_operate_ret == 1)
+        printf(" success\n");
+    else if(_operate_ret == -1)
+        printf(" failed -- 权限不足\n");
+    else if(_operate_ret == -2)
+        printf(" failed -- 用户名已存在\n");
+    else
+        printf(" failed -- 未知错误\n");
+}
+
+void 
+m_client::m_add_user()
+{
+    int gid = 1;
+    std::string user_name, user_password, temp_passwd, user_mail;
+    m_input i;
+    m_noecho noec;
+
+    i.input();
+    printf(">group id: ");
+    while(1) 
+    {
+        try 
+        {
+            getline(std::cin, temp_passwd);
+            gid = std::stoi(temp_passwd);
+            if(gid < 1)
+            {
+                printf("error - 输入有误\n>group id: ");
+                continue;
+            }
+            break;
+        }
+        catch(std::exception& invalid_argument) 
+        {
+            printf("error - 输入有误\n>group id: ");
+            continue;
+        }
+    } 
+    printf(">user name: ");
+    _get_string(user_name, 10);
+    while(1)
+    {
+        noec.noecho();
+        printf(">%s's password: ", user_name.c_str());
+        _get_string(user_password, 30); 
+        user_password = m_md5::md5sum(user_password);
+        printf("\n>retype password: ");
+        _get_string(temp_passwd, 30);
+        temp_passwd = m_md5::md5sum(temp_passwd);
+        noec.recover();
+        if(temp_passwd == user_password)
+            break;
+        printf("\nerror - password are different\n");
+    }
+    printf("\n>%s's email: ", user_name.c_str());
+    _get_string(user_mail, 30);
+    i.recover();
+    _snode->send_add_user_data(gid, user_name, user_password, user_mail);
+    
+    //阻塞等结果
+    printf("add user...");
+    fflush(stdin);
+    _operate_ret = -1;
+    _sem.wait();
+    
+    //return        
+    if(_operate_ret == 1)
+        printf(" success\n");
+    else if(_operate_ret == -1)
+        printf(" failed -- 权限不足\n");
+    else if(_operate_ret == -2)
+        printf(" failed -- 用户名已存在\n");
+    else if(_operate_ret == -3)
+        printf(" failed -- 组不存在\n");
+    else
+        printf(" failed -- 未知错误\n"); 
 }
 
 void 
@@ -473,4 +575,23 @@ m_client::m_show_wake()
 {
     _sem.wakeup();
 }
+
+void 
+m_client::_get_string(std::string& str, int maxlen)
+{
+    if(maxlen <= 0)
+        maxlen = 10;
+    getline(std::cin, str);
+    int length = str.size();
+    while(length == 0 || length > maxlen)
+    {
+        if(length == 0)
+            printf("error - 内容不能为空\n> ");
+        else
+            printf("error - 输入过长(length <= %dbyte)\n> ", maxlen);
+        getline(std::cin, str);
+        length = str.size();
+    }
+}
+
 

@@ -153,6 +153,40 @@ m_send_node::send_show_plan_g_data(int mode)
     });  
 }
 
+void 
+m_send_node::send_add_group_data(std::string& gname, std::string& uname, std::string& passwd, std::string& email)
+{
+    add_group* ag = new add_group();
+    snprintf(ag->group_name, 12, "%s", gname.c_str());
+    snprintf(ag->admin_name, 12, "%s", uname.c_str());
+    snprintf(ag->admin_password, 34, "%s", passwd.c_str());
+    snprintf(ag->admin_mail, 34, "%s", email.c_str());
+
+    //addtask
+    this->addtask([this, ag]()
+    {
+        send(_sockfd, (const char*)ag, sizeof(*ag), 0); 
+        delete ag;
+    });  
+}
+
+void 
+m_send_node::send_add_user_data(int gid, std::string& name, std::string& passwd, std::string& email)
+{
+    add_user* au = new add_user();
+    au->group_id = gid;
+    snprintf(au->user_name, 12, "%s", name.c_str());
+    snprintf(au->user_password, 34, "%s", passwd.c_str());
+    snprintf(au->user_mail, 34, "%s", email.c_str());
+
+    //addtask
+    this->addtask([this, au]()
+    {
+        send(_sockfd, (const char*)au, sizeof(*au), 0); 
+        delete au;
+    });  
+}
+
 void
 m_send_node::start()
 {

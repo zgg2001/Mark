@@ -101,12 +101,21 @@ public:
     void m_show_plan_u(int mode);
     void m_show_plan_g(int mode);
     void m_show_wake();
+
+    /*
+    * root指令
+    */
+    void m_add_group();
+    void m_add_user();
     
 private:
     //upd_plan数据的接收实现
     void _upd_plan_t(int& time);
     void _upd_plan_s(int& status);
     void _upd_plan_c(std::string& content, std::string& remark);
+    
+    //接收一个字符串(0 < length < maxlen)
+    void _get_string(std::string& str, int maxlen);
 
 private:
     m_client();
@@ -122,6 +131,9 @@ private:
 private:
     //本机socket
     SOCKET _sock;
+
+    //本机名
+    std::string _username;
 
     //连接状态
     bool _status;
