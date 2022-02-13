@@ -28,7 +28,11 @@ enum cmd
     CMD_SHOW_PLAN_USER, //show个人计划
     CMD_SHOW_RESULT_U,  //获取个人计划结果
     CMD_SHOW_PLAN_GROUP,//show组计划
-    CMD_SHOW_RESULT_G   //获取组计划结果
+    CMD_SHOW_RESULT_G,  //获取组计划结果
+
+    //仅root可执行
+    CMD_ADD_GROUP,      //添加新组
+    CMD_ADD_USER,       //添加新用户
 };
 
 /*
@@ -76,7 +80,7 @@ struct login : public header
         this->cmd = CMD_LOGIN;
         this->length = sizeof(login);
     }
-    char username[34];//用户名
+    char username[12];//用户名
     char password[34];//密码
 };
 
@@ -285,6 +289,38 @@ struct show_result_g : public header
     int sn;//状态数 为0时说明为尾包 客户端停止阻塞
     int noap;//有效计划数 <=10
     show_ret_g plans[10];
+};
+
+/*
+* 添加新组
+*/
+struct add_group : public header
+{
+    add_group()
+    {
+        this->cmd = CMD_ADD_GROUP;
+        this->length = sizeof(add_group);
+    }
+    char group_name[12];
+    char admin_name[12];
+    char admin_password[34];
+    char admin_mail[34];
+};
+
+/*
+* 添加新用户
+*/
+struct add_user : public header
+{
+    add_user()
+    {
+        this->cmd = CMD_ADD_USER;
+        this->length = sizeof(add_user);
+    }
+    int group_id;
+    char user_name[12];
+    char user_password[34];
+    char user_mail[34];
 };
 
 #endif
