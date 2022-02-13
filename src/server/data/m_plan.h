@@ -8,6 +8,9 @@
 #ifndef _M_PLAN_H_
 #define _M_PLAN_H_
 
+#include<atomic>
+#include<mutex>
+
 /*
 * 计划状态
 *
@@ -43,27 +46,34 @@ public:
 
 public:
     //普通构造
-    m_plan(int plan_id, int user_id,
+    m_plan(int plan_id, int now_id, int user_id,
            int create_t, int plan_t,
            const char* content_str, const char* remark_str);
     m_plan() = default;
     //copy构造
-    m_plan(const m_plan& p) = default;
-    m_plan& operator= (const m_plan& p) = default;
+    m_plan(const m_plan& p);
+    m_plan& operator= (const m_plan& p) = delete;
+   
     //更改内容
     void change(const char* content_str, const char* remark_str);
 
+    //获取content/remark
+    const char* get_content();
+    const char* get_remark();
+
 public:
-    int id;
-    int create_user;
-    plan_status status;
-    int create_time;
-    int plan_time;
-    char content[SIZE];
-    char remark[SIZE];
+    std::atomic<int> id;
+    std::atomic<int> now_user;
+    std::atomic<int> create_user;
+    std::atomic<plan_status> status;
+    std::atomic<int> create_time;
+    std::atomic<int> plan_time;
+
+private:
+    char _content[SIZE];
+    char _remark[SIZE];
+    std::mutex _mutex;
 };
 
 #endif
-
-
 

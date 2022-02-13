@@ -322,7 +322,7 @@ m_group_node::recvdata(SOCKET sockfd)
                 int plan_id = dp->plan_id;
                
                 //获取主键id
-                int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id : -1; 
+                int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id.load() : -1; 
                 //group_node: del plan
                 int ret = _group->delplan(client->get_uid(), plan_id);
                 //数据库: del plan task
@@ -344,7 +344,7 @@ m_group_node::recvdata(SOCKET sockfd)
                 int plan_id = upt->plan_id;
                 
                 //获取主键id
-                int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id : -1; 
+                int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id.load() : -1; 
                 //group_node: upd plan
                 int ret = _group->updplan_t(client->get_uid(), plan_id, upt->plan_time);
                 //数据库: del plan task
@@ -366,7 +366,7 @@ m_group_node::recvdata(SOCKET sockfd)
                 int plan_id = ups->plan_id;
                 
                 //获取主键id
-                int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id : -1; 
+                int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id.load() : -1; 
                 //group_node: upd plan
                 int ret = _group->updplan_s(client->get_uid(), plan_id, ups->status);
                 //数据库: del plan task
@@ -388,7 +388,7 @@ m_group_node::recvdata(SOCKET sockfd)
                 int plan_id = upc->plan_id;
                 
                 //获取主键id
-                int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id : -1; 
+                int id = _group->plans.count(plan_id) != 0 ? _group->plans[plan_id].id.load() : -1; 
                 //group_node: upd plan
                 int ret = _group->updplan_c(client->get_uid(), plan_id, upc->content, upc->remark);
                 //数据库: del plan task
@@ -485,24 +485,15 @@ m_group_node::send_show_result(SOCKET sockfd, int plan_id)
     {
         m_plan& plan = _group->plans[plan_id];
         sr.plan_id = plan_id;
-        sr.create_id = plan.create_user;
+        sr.user_id = plan.now_user.load();
+        snprintf(sr.create_name, 12, "%s", _group->users[sr.user_id].username.c_str());
+        sr.create_id = plan.create_user.load();
         snprintf(sr.username, 12, "%s", _group->users[sr.create_id].username.c_str());
-        sr.status = static_cast<int>(plan.status);
-        for(auto& [uid, u] : _group->users)
-        {
-            for(auto iter = u.plans[sr.status].begin(); iter != u.plans[sr.status].end(); ++iter)
-            {
-                if(*iter == plan_id)
-                {
-                    sr.user_id = uid;
-                    snprintf(sr.create_name, 12, "%s", _group->users[sr.user_id].username.c_str());
-                }
-            }
-        }
-        sr.create_time = plan.create_time;
-        sr.plan_time = plan.plan_time;
-        snprintf(sr.content, 102, "%s", plan.content);
-        snprintf(sr.remark, 102, "%s", plan.remark);
+        sr.status = static_cast<int>(plan.status.load());
+        sr.create_time = plan.create_time.load();
+        sr.plan_time = plan.plan_time.load();
+        snprintf(sr.content, 102, "%s", plan.get_content());
+        snprintf(sr.remark, 102, "%s", plan.get_remark());
     }
     send(sockfd, (const char*)&sr, sizeof(sr), 0);
 }
@@ -536,10 +527,10 @@ m_group_node::send_show_result_u(SOCKET sockfd, int uid, int mode)
             }
             m_plan& plan = _group->plans[plan_id];
             sru.plans[now].plan_id = plan_id;
-            sru.plans[now].status = static_cast<int>(plan.status);
-            sru.plans[now].create_time = plan.create_time;
-            sru.plans[now].plan_time = plan.plan_time;
-            snprintf(sru.plans[now].content, 102, "%s", plan.content);
+            sru.plans[now].status = static_cast<int>(plan.status.load());
+            sru.plans[now].create_time = plan.create_time.load();
+            sru.plans[now].plan_time = plan.plan_time.load();
+            snprintf(sru.plans[now].content, 102, "%s", plan.get_content());
             sru.noap = now++;
         }
     }
@@ -579,10 +570,10 @@ m_group_node::send_show_result_g(SOCKET sockfd, int mode)
             srg.plans[now].plan_id = plan_id;
             srg.plans[now].user_id = u.user_id;
             snprintf(srg.plans[now].username, 12, "%s", u.username.c_str());
-            srg.plans[now].status = static_cast<int>(plan.status);
-            srg.plans[now].create_time = plan.create_time;
-            srg.plans[now].plan_time = plan.plan_time;
-            snprintf(srg.plans[now].content, 102, "%s", plan.content);
+            srg.plans[now].status = static_cast<int>(plan.status.load());
+            srg.plans[now].create_time = plan.create_time.load();
+            srg.plans[now].plan_time = plan.plan_time.load();
+            snprintf(srg.plans[now].content, 102, "%s", plan.get_content());
             srg.noap = now++;
         }
     }

@@ -54,10 +54,9 @@ m_group::_add_plan(int p_id, int u_id, int status,
     if(plans.count(p_id) != 0)
         return -2;
     //添加计划节点
-    plans.insert({ p_id, 
-                 { plan_id, user_id, 
-                   create_t, plan_t,
-                   content_str, remark_str } });
+    plans.insert({ p_id, {plan_id, u_id, user_id,
+                          create_t, plan_t,
+                          content_str, remark_str} });
     plans[p_id].status = static_cast<plan_status>(status);
     //将此计划节点登记至所属用户下
     users[u_id].addplan(status, p_id);
