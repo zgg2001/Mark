@@ -96,6 +96,8 @@ public:
     * 否则为用户的uid/gid
     */
     std::pair<int, int> login(const char* name, const char* passwd);
+    bool user_exists(const char* name);
+    bool group_exists(int gid);
 
     /*
     * 客户端节点登录
@@ -103,9 +105,11 @@ public:
     void node_login(int gid, m_client_node* node);
 
     /*
-    * 添加新计划
-    * 返回计划主键
+    * 添加新组/用户/计划
+    * 返回对应主键
     */
+    int add_group(const char* g_name, const char* a_name, const char* passwd, const char* email);
+    int add_user(int g_id, const char* name, const char* passwd, const char* email);
     int add_plan(int g_id, int p_id, int user_id, //组id, 组内id, 创建者id,
                  int create_t, int plan_t, //创建时间, 计划时间
                  const char* content_str, const char* remark_str); //内容, 备注
@@ -145,7 +149,9 @@ private:
     std::list<task> _tasksbuf;
 
     //lock
-    std::mutex _mutex;
+    std::mutex _mutex_task;//任务队列锁
+    std::mutex _mutex_id;//主键锁
+    std::mutex _mutex_gnode;//gnode锁
 };
 
 #endif

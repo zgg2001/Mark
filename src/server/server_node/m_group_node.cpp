@@ -446,6 +446,52 @@ m_group_node::recvdata(SOCKET sockfd)
             }
             break;
             
+            //新增组
+            case CMD_ADD_GROUP:
+            {
+                add_group* ag = (add_group*)ph;
+                int ret = 1;
+               
+                if(client->get_uid() != 1)//无权限
+                    ret = -1;
+                else if(_server->user_exists(ag->admin_name) == true)//用户名已存在
+                    ret = -2;
+                else
+                    _server->add_group(ag->group_name, ag->admin_name, 
+                                       ag->admin_password, ag->admin_mail);
+                
+                //add ret
+                _tnode.addtask([this, sockfd, ret]()
+                {
+                    this->send_operate_result(sockfd, ret);
+                });
+            }
+            break;
+            
+            //新增用户
+            case CMD_ADD_USER:
+            {
+                add_user* au = (add_user*)ph;
+                int ret = 1;
+                
+                if(client->get_uid() != 1)//无权限
+                    ret = -1;
+                else if(_server->user_exists(au->user_name) == true)//用户名已存在
+                    ret = -2;
+                else if(_server->group_exists(au->group_id) == false)//组不存在
+                    ret = -3;
+                else
+                    _server->add_user(au->group_id, au->user_name, 
+                                      au->user_password, au->user_mail);
+                
+                //add ret
+                _tnode.addtask([this, sockfd, ret]()
+                {
+                    this->send_operate_result(sockfd, ret);
+                });
+            }
+            break;
+            
             default:
             {
                 ERROR("send_node 收到非法包");

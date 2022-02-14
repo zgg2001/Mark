@@ -153,6 +153,13 @@ m_db_mgr::login(std::string& name, std::string& passwd)
     return ret;
 }
 
+bool 
+m_db_mgr::user_exists(std::string& name)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    return _info_map.count(name);
+}
+
 int 
 m_db_mgr::get_pk_plan_id()
 {
@@ -212,7 +219,6 @@ m_db_mgr::add_plan(int g_id, int p_id, int user_id,
                    int id, int create_t, int plan_t,
                    const char* content_str, const char* remark_str)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
     char sql[512] = { 0 };
 
     snprintf(sql, 512, SQL_INSERT_PLAN, id, user_id, create_t, plan_t, content_str, remark_str);
@@ -228,7 +234,6 @@ m_db_mgr::add_plan(int g_id, int p_id, int user_id,
 void
 m_db_mgr::del_plan(int id)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
     char sql[128] = { 0 };
     
     snprintf(sql, 128, SQL_DELETE_PLAN, id);
@@ -243,7 +248,6 @@ m_db_mgr::del_plan(int id)
 void 
 m_db_mgr::upd_plan_t(int id, int time)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
     char sql[128] = { 0 };
     
     snprintf(sql, 128, SQL_UPDATE_PLAN_TIME, time, id);
@@ -255,7 +259,6 @@ m_db_mgr::upd_plan_t(int id, int time)
 void 
 m_db_mgr::upd_plan_s(int id, int status)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
     char sql[128] = { 0 };
     
     snprintf(sql, 128, SQL_UPDATE_PLAN_STATUS, status, id);
@@ -267,7 +270,6 @@ m_db_mgr::upd_plan_s(int id, int status)
 void 
 m_db_mgr::upd_plan_c(int id, const char* content, const char* remark)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
     char sql[512] = { 0 };
     
     snprintf(sql, 512, SQL_UPDATE_PLAN_CONTENT, content, remark, id);
@@ -276,7 +278,39 @@ m_db_mgr::upd_plan_c(int id, const char* content, const char* remark)
     //DEBUG("m_db_mgr upd_plan_c end");
 }
 
+void 
+m_db_mgr::add_group(int gid, int uid, const char* g_name, const char* a_name, const char* passwd, const char* email)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char sql[256] = { 0 };
 
+    snprintf(sql, 256, SQL_INSERT_GROUP, gid, g_name, uid);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+    snprintf(sql, 256, SQL_INSERT_USER, uid, a_name, passwd, email);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+    snprintf(sql, 256, SQL_INSERT_USER_GROUP, uid, gid);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+    
+    std::string u {a_name};
+    std::string p {passwd};
+    _info_map[u] = _info {uid, gid, u, p};
+}
+
+void 
+m_db_mgr::add_user(int gid, int uid, const char* name, const char* passwd, const char* email)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char sql[256] = { 0 };
+
+    snprintf(sql, 256, SQL_INSERT_USER, uid, name, passwd, email);
+    _db.exec(sql, nullptr, nullptr, nullptr);
+    snprintf(sql, 256, SQL_INSERT_USER_GROUP, uid, gid);
+    _db.exec(sql, nullptr, nullptr, nullptr); 
+    
+    std::string u {name};
+    std::string p {passwd};
+    _info_map[u] = _info {uid, gid, u, p};
+}
 
 
 

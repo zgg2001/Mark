@@ -204,7 +204,7 @@ m_server::m_work()
         //数据库更新task缓冲区 
         if(!_tasksbuf.empty()) 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::mutex> lock(_mutex_task);
             for(auto& t : _tasksbuf)
             {
                 _tasks.push_back(t);
@@ -229,12 +229,14 @@ m_server::m_work()
 void 
 m_server::new_group_node(int g_id, const char* g_name, int a_id)
 {
+    std::lock_guard<std::mutex> lock(_mutex_gnode);
     _gnodes[g_id] = new m_group_node(g_id, g_name, a_id, this);
 }
 
 void
 m_server::new_group_user(int g_id, int u_id, const char* name, const char* email)
 {
+    std::lock_guard<std::mutex> lock(_mutex_gnode);
     _gnodes[g_id]->adduser(u_id, name, email);
 }
 
@@ -244,6 +246,7 @@ m_server::new_group_plan(int g_id, int p_id, int u_id, int status,
                          int create_t, int plan_t,
                          const char* content_str, const char* remark_str)
 {
+    std::lock_guard<std::mutex> lock(_mutex_gnode);
     _gnodes[g_id]->addplan(p_id, u_id, status, plan_id, user_id,
                            create_t, plan_t, content_str, remark_str);
 }
@@ -254,6 +257,20 @@ m_server::login(const char* name, const char* passwd)
     std::string n {name};
     std::string p {passwd};
     return _db->login(n, p);
+}
+
+bool 
+m_server::user_exists(const char* name)
+{
+    std::string n = name;
+    return _db->user_exists(n);
+}
+
+bool 
+m_server::group_exists(int gid)
+{
+    std::lock_guard<std::mutex> lock(_mutex_gnode);
+    return _gnodes.count(gid);
 }
 
 void 
@@ -269,18 +286,74 @@ m_server::node_login(int gid, m_client_node* node)
 }
 
 int 
+m_server::add_group(const char* g_name, const char* a_name, const char* passwd, const char* email)
+{
+    std::lock_guard<std::mutex> lock(_mutex_id);
+    int gid = _pk_group_id++;
+    int uid = _pk_user_id++;
+    this->new_group_node(gid, g_name, uid);//group_node
+    this->new_group_user(gid, uid, a_name, email);//user
+
+    char* g_str = new char[12];
+    char* a_str = new char[12];
+    char* p_str = new char[34];
+    char* e_str = new char[34];
+    snprintf(g_str, 12, "%s", g_name);
+    snprintf(a_str, 12, "%s", a_name);
+    snprintf(p_str, 34, "%s", passwd);
+    snprintf(e_str, 34, "%s", email);
+
+    std::lock_guard<std::mutex> lock2(_mutex_task);
+    _tasksbuf.push_back([=]()
+    {
+        _db->add_group(gid, uid, g_str, a_str, p_str, e_str);
+        delete[] g_str;
+        delete[] a_str;
+        delete[] p_str;
+        delete[] e_str;
+    });
+    return gid;
+}
+    
+int
+m_server::add_user(int g_id, const char* name, const char* passwd, const char* email)
+{
+    std::lock_guard<std::mutex> lock(_mutex_id);
+    int uid = _pk_user_id++;
+    this->new_group_user(g_id, uid, name, email);//user
+    
+    char* n_str = new char[12];
+    char* p_str = new char[34];
+    char* e_str = new char[34];
+    snprintf(n_str, 12, "%s", name);
+    snprintf(p_str, 34, "%s", passwd);
+    snprintf(e_str, 34, "%s", email);
+    
+    std::lock_guard<std::mutex> lock2(_mutex_task);
+    _tasksbuf.push_back([=]()
+    {
+        _db->add_user(g_id, uid, n_str, p_str, e_str);
+        delete[] n_str;
+        delete[] p_str;
+        delete[] e_str;
+    });
+    return uid;
+}
+
+int 
 m_server::add_plan(int g_id, int p_id, int user_id,
                    int create_t, int plan_t,
                    const char* content_str, const char* remark_str)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock1(_mutex_id);
     char* c_str = new char[102];
     char* r_str = new char[102];
-    int id = _pk_plan_id;
+    int id = _pk_plan_id++;
 
     snprintf(c_str, 102, "%s", content_str);
     snprintf(r_str, 102, "%s", remark_str);
 
+    std::lock_guard<std::mutex> lock2(_mutex_task);
     _tasksbuf.push_back([=]()
     {
         _db->add_plan(g_id, p_id, user_id,
@@ -288,55 +361,47 @@ m_server::add_plan(int g_id, int p_id, int user_id,
                       c_str, r_str);
         delete[] c_str;
         delete[] r_str;
-        //DEBUG("taskbuf add_plan end");
     });
-    //DEBUG("m_server add_plan end");
-    return _pk_plan_id++;
+    return id;
 }
 
 void
 m_server::del_plan(int id)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_mutex_task);
     
     _tasksbuf.push_back([this, id]()
     {
         _db->del_plan(id);
-        //DEBUG("taskbuf del_plan end");
     });
-    //DEBUG("m_server del_plan end");
 }
 
 void 
 m_server::upd_plan_t(int id, int time)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_mutex_task);
     
     _tasksbuf.push_back([this, id, time]()
     {
         _db->upd_plan_t(id, time);
-        //DEBUG("taskbuf upd_plan_t end");
     });
-    //DEBUG("m_server upd_plan_t end");
 }
 
 void 
 m_server::upd_plan_s(int id, int status)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_mutex_task);
     
     _tasksbuf.push_back([this, id, status]()
     {
         _db->upd_plan_s(id, status);
-        //DEBUG("taskbuf upd_plan_s end");
     });
-    //DEBUG("m_server upd_plan_s end");
 }
 
 void 
 m_server::upd_plan_c(int id, const char* content, const char* remark)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_mutex_task);
     char* c_str = new char[102];
     char* r_str = new char[102];
 
@@ -348,9 +413,7 @@ m_server::upd_plan_c(int id, const char* content, const char* remark)
         _db->upd_plan_c(id, c_str, r_str);
         delete[] c_str;
         delete[] r_str;
-        //DEBUG("taskbuf upd_plan_c end");
     });
-    //DEBUG("m_server upd_plan_c end");
 }
 
 

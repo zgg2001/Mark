@@ -147,7 +147,7 @@ m_login_node::func_run(m_thread* thread)
                     {
                         delete _clients[events[i].data.fd];
                     }
-                    else if(ret == 1)//登录
+                    else if(ret > 0)//登录
                     {
                         _clients[events[i].data.fd]->reset_hb();//心跳重置
                         _server->node_login(ret, _clients[events[i].data.fd]);//分配至group_node

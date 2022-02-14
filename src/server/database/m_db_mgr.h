@@ -54,6 +54,7 @@ public:
     * 否则为用户的uid/gid
     */
     std::pair<int, int> login(std::string& name, std::string& passwd);
+    bool user_exists(std::string& name);//是否存在此用户
 
     /*
     * 获取下一个主键id
@@ -81,6 +82,12 @@ public:
     void upd_plan_s(int id, int status);
     void upd_plan_c(int id, const char* content, const char* remark);
 
+    /*
+    * 数据库新增组/用户
+    */
+    void add_group(int gid, int uid, const char* g_name, const char* a_name, const char* passwd, const char* email);
+    void add_user(int gid, int uid, const char* name, const char* passwd, const char* email);
+
 private:
     //所属server
     m_server* _server;
@@ -90,7 +97,7 @@ private:
     bool _status;
     
     //锁
-    std::mutex _mutex;
+    std::mutex _mutex;//锁用户信息表
 
 private:
     //用户-密码结构体
@@ -248,6 +255,23 @@ private:
         mark_plan set content = '%s', remark = '%s' \
     WHERE \
         id = %d;";
+
+    //新增组/计划
+    static constexpr char SQL_INSERT_GROUP[] = " \
+    INSERT INTO \
+        mark_group \
+    VALUES \
+        (%d, '%s', %d);";
+    static constexpr char SQL_INSERT_USER[] = " \
+    INSERT INTO \
+        mark_user \
+    VALUES \
+        (%d, '%s','%s', '%s');";
+    static constexpr char SQL_INSERT_USER_GROUP[] = " \
+    INSERT INTO \
+        mark_user_group \
+    VALUES \
+        (%d, %d);";
 };
 
 #endif
