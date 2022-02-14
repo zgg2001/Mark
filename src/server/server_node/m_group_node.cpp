@@ -558,7 +558,7 @@ m_group_node::send_show_result_u(SOCKET sockfd, int uid, int mode)
     int now = 0;
     show_result_u sru;
     sru.sn = 1;
-    sru.noap = now;
+    sru.noap = -1;
 
     //work
     for(auto& lnow : lplans)
@@ -599,7 +599,7 @@ m_group_node::send_show_result_g(SOCKET sockfd, int mode)
     int now = 0;
     show_result_g srg;
     srg.sn = 1;
-    srg.noap = now;
+    srg.noap = -1;
 
     //work
     for(auto& [u, lnow] : lplans)
