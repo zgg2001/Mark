@@ -102,6 +102,9 @@ log::set_level(int level)
 void 
 log::log_write(const char* prev_str, const char* format, ...)
 {
+    //lock
+    std::lock_guard<std::mutex>lock(_lock);
+    
     char log_buf[LOG_BUF_MAX_SIZE];
     int log_len = 0;
     
