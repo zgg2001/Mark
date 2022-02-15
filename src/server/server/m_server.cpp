@@ -256,6 +256,7 @@ m_server::login(const char* name, const char* passwd)
 {
     std::string n {name};
     std::string p {passwd};
+    p = m_md5::md5sum(p);//二次md5
     return _db->login(n, p);
 }
 
@@ -293,6 +294,7 @@ m_server::add_group(const char* g_name, const char* a_name, const char* passwd, 
     int uid = _pk_user_id++;
     this->new_group_node(gid, g_name, uid);//group_node
     this->new_group_user(gid, uid, a_name, email);//user
+    std::string p = m_md5::md5sum({passwd});//二次md5
 
     char* g_str = new char[12];
     char* a_str = new char[12];
@@ -300,7 +302,7 @@ m_server::add_group(const char* g_name, const char* a_name, const char* passwd, 
     char* e_str = new char[34];
     snprintf(g_str, 12, "%s", g_name);
     snprintf(a_str, 12, "%s", a_name);
-    snprintf(p_str, 34, "%s", passwd);
+    snprintf(p_str, 34, "%s", p.c_str());
     snprintf(e_str, 34, "%s", email);
 
     std::lock_guard<std::mutex> lock2(_mutex_task);
@@ -321,12 +323,13 @@ m_server::add_user(int g_id, const char* name, const char* passwd, const char* e
     std::lock_guard<std::mutex> lock(_mutex_id);
     int uid = _pk_user_id++;
     this->new_group_user(g_id, uid, name, email);//user
+    std::string p = m_md5::md5sum({passwd});//二次md5
     
     char* n_str = new char[12];
     char* p_str = new char[34];
     char* e_str = new char[34];
     snprintf(n_str, 12, "%s", name);
-    snprintf(p_str, 34, "%s", passwd);
+    snprintf(p_str, 34, "%s", p.c_str());
     snprintf(e_str, 34, "%s", email);
     
     std::lock_guard<std::mutex> lock2(_mutex_task);

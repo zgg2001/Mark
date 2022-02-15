@@ -67,7 +67,7 @@ m_db_mgr::init(const char* host, const char* user,
         _db.exec(SQL_CREATE_USER_TBL, &res, &row, &field);
         
         //root用户/组 初始密码123456
-        _db.exec("insert into mark_user values (1, 'root', 'e10adc3949ba59abbe56e057f20f883e', '')", &res, &row, &field); 
+        _db.exec("insert into mark_user values (1, 'root', '14e1b600b1fd579f47433b88e8d85291', '')", &res, &row, &field); 
         _db.exec("insert into mark_group values(1, 'root', 1);", &res, &row, &field);
         _db.exec("insert into mark_user_group values(1, 1);", &res, &row, &field);
     }

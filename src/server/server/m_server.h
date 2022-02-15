@@ -22,6 +22,7 @@
 #include<server/server_node/m_login_node.h>
 #include<server/server_node/m_group_node.h>
 #include<public/log/log.h>
+#include<public/security/m_md5.h>
 
 class m_server
 {
