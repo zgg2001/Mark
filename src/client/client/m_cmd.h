@@ -309,6 +309,37 @@ parse_inst_t cmd_show_plan_g = {
 };
 
 /*
+* 更改密码
+*/
+struct cmd_reset_password_result
+{
+    fixed_string_t str1;
+    fixed_string_t str2;
+};
+
+static void
+cmd_reset_password_parsed(struct cmdline* cl, void* parsed_result, void* data)
+{
+    m_client::ins()->m_reset_password();
+}
+
+parse_token_string_t cmd_reset_password_tok1 =
+    TOKEN_STRING_INITIALIZER(struct cmd_reset_password_result, str1, "reset");
+parse_token_string_t cmd_reset_password_tok2 =
+    TOKEN_STRING_INITIALIZER(struct cmd_reset_password_result, str2, "password");
+
+parse_inst_t cmd_reset_password = {
+    .f = cmd_reset_password_parsed,
+    .data = NULL,
+    .help_str = (char*)"重置密码 reset password",
+    .tokens = {
+        reinterpret_cast<parse_token_hdr_t*>(&cmd_reset_password_tok1),
+        reinterpret_cast<parse_token_hdr_t*>(&cmd_reset_password_tok2),
+        NULL,
+    },
+};
+
+/*
 * 命令 新增组/用户
 */
 struct cmd_add_group_user_result
@@ -355,6 +386,7 @@ parse_ctx_t main_ctx[] = {//常规
     reinterpret_cast<parse_inst_t*>(&cmd_show_plan),
     reinterpret_cast<parse_inst_t*>(&cmd_show_plan_u),
     reinterpret_cast<parse_inst_t*>(&cmd_show_plan_g),
+    reinterpret_cast<parse_inst_t*>(&cmd_reset_password),
     NULL,
 };
 parse_ctx_t main_ctx_root[] = {//root
@@ -365,6 +397,7 @@ parse_ctx_t main_ctx_root[] = {//root
     reinterpret_cast<parse_inst_t*>(&cmd_show_plan),
     reinterpret_cast<parse_inst_t*>(&cmd_show_plan_u),
     reinterpret_cast<parse_inst_t*>(&cmd_show_plan_g),
+    reinterpret_cast<parse_inst_t*>(&cmd_reset_password),
     reinterpret_cast<parse_inst_t*>(&cmd_add_group_user),
     NULL,
 };

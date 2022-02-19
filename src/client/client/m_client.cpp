@@ -159,13 +159,13 @@ m_client::m_login()
 
     std::string name, passwd;
     printf("login as: ");
-    std::cin >> name;
+    getline(std::cin, name);
     for(int i = 0; i < 3; ++i)
     {
         //接收
         printf("%s's password: ", name.c_str());
         noec.noecho();
-        std::cin >> passwd;
+        getline(std::cin, passwd);
         printf("\n");
         noec.recover();
         passwd = m_md5::md5sum(passwd);
@@ -181,6 +181,7 @@ m_client::m_login()
         if(_login_ret == 0)
         {
             _username = name;
+            _password = passwd;
             return true;
         }
         printf("Access denied\n");
@@ -414,6 +415,53 @@ m_client::m_operate_wake(int ret)
 {
     _operate_ret = ret;
     _sem.wakeup();
+}
+
+void
+m_client::m_reset_password()
+{
+    std::string passwd, new_p, temp_p;
+    m_noecho noec;
+
+    //验证
+    printf(">Current password: ");
+    noec.noecho();
+    getline(std::cin, passwd);
+    printf("\n");
+    passwd = m_md5::md5sum(passwd);
+    if(passwd != _password)
+    {
+        printf("passwd: Authentication token manipulation error\n");
+        return;
+    }
+
+    //new
+    printf(">New password: ");
+    getline(std::cin, new_p);
+    new_p = m_md5::md5sum(new_p);
+    printf("\n>Retype password: ");
+    getline(std::cin, temp_p);
+    temp_p = m_md5::md5sum(temp_p);
+    printf("\n");
+    noec.recover();
+    if(new_p != temp_p)
+    {
+        printf("error - password are different\n");
+        return; 
+    }
+    
+    //阻塞等结果
+    _snode->send_reset_password_data(new_p);
+    printf("reset password...");
+    fflush(stdin);
+    _operate_ret = -1;
+    _sem.wait();
+    
+    //ret
+    if(_operate_ret == 1)
+        printf(" success\n");
+    else
+        printf(" failed\n");
 }
 
 void 

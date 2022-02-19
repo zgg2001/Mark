@@ -154,6 +154,20 @@ m_send_node::send_show_plan_g_data(int mode)
 }
 
 void 
+m_send_node::send_reset_password_data(std::string new_p)
+{
+    reset_password* rp = new reset_password();
+    snprintf(rp->new_password, 34, "%s", new_p.c_str());
+
+    //addtask
+    this->addtask([this, rp]()
+    {
+        send(_sockfd, (const char*)rp, sizeof(*rp), 0); 
+        delete rp;
+    });  
+}
+
+void 
 m_send_node::send_add_group_data(std::string& gname, std::string& uname, std::string& passwd, std::string& email)
 {
     add_group* ag = new add_group();

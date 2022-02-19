@@ -64,6 +64,11 @@ public:
     void send_show_plan_g_data(int mode);
 
     /*
+    * 重置密码报文
+    */
+    void send_reset_password_data(std::string new_p);
+
+    /*
     * 新增组/用户报文
     */
     void send_add_group_data(std::string& gname, std::string& uname, std::string& passwd, std::string& email);

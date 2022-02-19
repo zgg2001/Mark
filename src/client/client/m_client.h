@@ -103,6 +103,11 @@ public:
     void m_show_wake();
 
     /*
+    * 重置密码
+    */
+    void m_reset_password();
+
+    /*
     * root指令
     */
     void m_add_group();
@@ -132,8 +137,9 @@ private:
     //本机socket
     SOCKET _sock;
 
-    //本机名
+    //本机名/密码
     std::string _username;
+    std::string _password;
 
     //连接状态
     bool _status;
