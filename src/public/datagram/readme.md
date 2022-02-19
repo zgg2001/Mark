@@ -38,6 +38,7 @@ enum cmd
     CMD_SHOW_RESULT_U,  //获取个人计划结果
     CMD_SHOW_PLAN_GROUP,//show组计划
     CMD_SHOW_RESULT_G,  //获取组计划结果
+    CMD_RESET_PASSWORD, //重置密码
 
     //仅root可执行
     CMD_ADD_GROUP,      //添加新组
