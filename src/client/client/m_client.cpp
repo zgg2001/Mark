@@ -451,15 +451,21 @@ m_client::m_reset_password()
     }
     
     //阻塞等结果
-    _snode->send_reset_password_data(new_p);
+    _snode->send_reset_password_data(_username, new_p);
     printf("reset password...");
     fflush(stdin);
     _operate_ret = -1;
     _sem.wait();
     
     //ret
-    if(_operate_ret == 1)
+    if(_operate_ret == 0)
+    {
         printf(" success\n");
+        cmdline_quit(_cl);
+        printf("\n-------------------------------------"
+               "\n  Disconnect: 密码已重置 请重新登录"
+               "\n-------------------------------------\n");
+    }
     else
         printf(" failed\n");
 }

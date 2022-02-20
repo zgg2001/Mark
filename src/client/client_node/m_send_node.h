@@ -66,7 +66,7 @@ public:
     /*
     * 重置密码报文
     */
-    void send_reset_password_data(std::string new_p);
+    void send_reset_password_data(std::string username, std::string new_p);
 
     /*
     * 新增组/用户报文

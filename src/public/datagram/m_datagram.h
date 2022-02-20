@@ -302,6 +302,7 @@ struct reset_password : public header
         this->cmd = CMD_RESET_PASSWORD;
         this->length = sizeof(reset_password);
     }
+    char user_name[12];
     char new_password[34];
 };
 
