@@ -128,6 +128,11 @@ public:
     void upd_plan_t(int id, int time);
     void upd_plan_s(int id, int status);
     void upd_plan_c(int id, const char* content, const char* remark);
+    
+    /*
+    * 重置密码
+    */
+    int reset_password(int uid, const char* username, const char* new_p);
 
 private:
     //服务器socket

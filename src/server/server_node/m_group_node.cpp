@@ -446,6 +446,21 @@ m_group_node::recvdata(SOCKET sockfd)
             }
             break;
             
+            //重置密码
+            case CMD_RESET_PASSWORD:
+            {
+                reset_password* rp = (reset_password*)ph;
+                int ret;
+                ret = _server->reset_password(client->get_uid(), rp->user_name, rp->new_password);
+                
+                //add ret
+                _tnode.addtask([this, sockfd, ret]()
+                {
+                    this->send_operate_result(sockfd, ret);
+                });
+            }
+            break;
+            
             //新增组
             case CMD_ADD_GROUP:
             {

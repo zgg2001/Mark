@@ -419,7 +419,26 @@ m_server::upd_plan_c(int id, const char* content, const char* remark)
     });
 }
 
+int 
+m_server::reset_password(int uid, const char* username, const char* new_p)
+{
+    std::string n = username;
+    if(_db->user_exists(n) == false)
+        return -1;
+    
+    char* u_str = new char[12];
+    char* p_str = new char[34];
+    snprintf(u_str, 12, "%s", username);
+    std::string p = m_md5::md5sum({new_p});//二次md5
+    snprintf(p_str, 34, "%s", p.c_str());
 
-
+    _tasksbuf.push_back([this, uid, u_str, p_str]()
+    {
+        _db->reset_password(uid, u_str, p_str);
+        delete[] u_str;
+        delete[] p_str;
+    });
+    return 0;
+}
 
 

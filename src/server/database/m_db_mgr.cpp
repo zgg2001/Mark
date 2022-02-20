@@ -154,7 +154,7 @@ m_db_mgr::login(std::string& name, std::string& passwd)
 }
 
 bool 
-m_db_mgr::user_exists(std::string& name)
+m_db_mgr::user_exists(const std::string& name)
 {
     std::lock_guard<std::mutex> lock(_mutex);
     return _info_map.count(name);
@@ -312,5 +312,16 @@ m_db_mgr::add_user(int gid, int uid, const char* name, const char* passwd, const
     _info_map[u] = _info {uid, gid, u, p};
 }
 
-
+void 
+m_db_mgr::reset_password(int uid, const char* name, const char* password)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+    char sql[256] = { 0 };
+    snprintf(sql, 256, SQL_RESET_USER_PASSWORD, password, uid);
+    _db.exec(sql, nullptr, nullptr, nullptr); 
+    
+    std::string u {name};
+    std::string p {password};
+    _info_map[u].password = p;
+}
 

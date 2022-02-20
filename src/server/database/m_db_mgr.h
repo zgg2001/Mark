@@ -54,7 +54,7 @@ public:
     * 否则为用户的uid/gid
     */
     std::pair<int, int> login(std::string& name, std::string& passwd);
-    bool user_exists(std::string& name);//是否存在此用户
+    bool user_exists(const std::string& name);//是否存在此用户
 
     /*
     * 获取下一个主键id
@@ -87,6 +87,11 @@ public:
     */
     void add_group(int gid, int uid, const char* g_name, const char* a_name, const char* passwd, const char* email);
     void add_user(int gid, int uid, const char* name, const char* passwd, const char* email);
+
+    /*
+    * 重置密码
+    */
+    void reset_password(int uid, const char* name, const char* password);
 
 private:
     //所属server
@@ -255,6 +260,13 @@ private:
         mark_plan set content = '%s', remark = '%s' \
     WHERE \
         id = %d;";
+    
+    //重置密码
+    static constexpr char SQL_RESET_USER_PASSWORD[] = " \
+    UPDATE \
+        mark_user set password = '%s' \
+    WHERE \
+        user_id = %d;";
 
     //新增组/计划
     static constexpr char SQL_INSERT_GROUP[] = " \
