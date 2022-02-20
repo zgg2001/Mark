@@ -9,7 +9,7 @@
 &emsp;&emsp;服务端与客户端之间的数据联络基于自定义报文协议实现，通过统一报头以及上文中提到的二级缓存区来处理半包、粘包及分包问题。
 
 ## 项目安装
-### 1.安装NiceCmdline 
+### 1.安装NiceCmdline
 客户端需要使用此交互式命令行库 `NiceCmdline`与用户进行交互，需要首先安装。
 ```shell
 $ git clone https://github.com/zgg2001/NiceCmdline
@@ -40,9 +40,29 @@ $ vim src/server/server/m_server.cpp +55 #修改数据库用户/密码
 $ vim src/client/mark_client.cpp +17     #修改客户端连接的ip/端口
 $ make
 ```
+
 ## 功能介绍
-待补充...
+### 1.服务端
+&emsp;&emsp;服务端可以在 `mark_server.cpp` 中设置日志等级和日志输出路径。其负责处理客户端报文与结果反馈。
+
+### 2.客户端
+客户端功能命令如下：
+```shell
+退出            exit
+添加计划        add plan
+删除计划        delete plan X
+更新计划        update plan time|status|content X
+展示计划        show plan X
+展示计划        show plan shelve|progressing|complete|all
+展示组计划      show group plan shelve|progressing|complete|all
+重置密码        reset password
+
+添加组/用户     add group|user (仅root用户可执行)
+```
+
 ## 作者
 zgg2001
+
 ## 版权说明
 该项目签署了 Apache-2.0 授权许可，详情请参阅 [LICENSE](https://github.com/zgg2001/Mark/blob/main/LICENSE)
+
